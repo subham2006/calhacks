@@ -4,16 +4,15 @@ function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [recognition, setRecognition] = useState(null);
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
-    // Initialize the Web Speech API
     if ('webkitSpeechRecognition' in window) {
       const newRecognition = new window.webkitSpeechRecognition();
-      newRecognition.continuous = false; // Set to true if you want continuous listening
+      newRecognition.continuous = false;
       newRecognition.interimResults = false;
       newRecognition.lang = 'en-US';
 
-      // Handle speech results
       newRecognition.onresult = (event) => {
         const speechResult = event.results[0][0].transcript;
         console.log('Transcript: ', speechResult);
@@ -44,19 +43,40 @@ function Home() {
     }
   };
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImage(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>Welcome to My App</h1>
-      <button onClick={handleMicrophoneClick} style={styles.button}>
-        <div style={styles.circle}>
-          <img 
-            src="https://img.icons8.com/ios-filled/50/microphone.png" 
-            alt="Microphone Icon" 
+      <header style={styles.header}>Welcome to EduPal.ai</header>
+      <div style={styles.content}>
+        <button onClick={handleMicrophoneClick} style={styles.button}>
+          <div style={styles.circle}>
+            <img 
+              src="https://img.icons8.com/ios-filled/50/microphone.png" 
+              alt="Microphone Icon" 
+            />
+          </div>
+        </button>
+        <div style={styles.text}>{isRecording ? 'Listening...' : 'Click to Talk'}</div>
+        {transcript && <div style={styles.transcript}>You said: {transcript}</div>}
+
+        <div style={styles.uploadContainer}>
+          <input 
+            type="file" 
+            accept="image/*" 
+            onChange={handleImageUpload} 
+            style={styles.uploadButton} 
           />
+          {image && <img src={image} alt="Uploaded" style={styles.previewImage} />}
         </div>
-      </button>
-      <div style={styles.text}>{isRecording ? 'Listening...' : 'Click to Talk'}</div>
-      {transcript && <div style={styles.transcript}>You said: {transcript}</div>}
+      </div>
     </div>
   );
 }
@@ -66,12 +86,24 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     height: '100vh',
-    textAlign: 'center',
   },
   header: {
-    marginBottom: '20px',
+    fontSize: '24px',
+    fontWeight: 'bold',
+    margin: '20px 0',
+    position: 'absolute',
+    top: '20px',
+    textAlign: 'center',
+    width: '100%',
+  },
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
   },
   button: {
     border: 'none',
@@ -96,6 +128,20 @@ const styles = {
     marginTop: '20px',
     fontSize: '16px',
     fontStyle: 'italic',
+  },
+  uploadContainer: {
+    marginTop: '30px',
+    textAlign: 'center',
+  },
+  uploadButton: {
+    marginBottom: '15px',
+    cursor: 'pointer',
+  },
+  previewImage: {
+    maxWidth: '300px',
+    maxHeight: '300px',
+    objectFit: 'contain',
+    marginTop: '10px',
   },
 };
 
