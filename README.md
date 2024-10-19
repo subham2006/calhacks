@@ -1,4 +1,4 @@
-# Getting Started with our Calhacks Project
+# Getting Started
 
 ## Install & Start
 
