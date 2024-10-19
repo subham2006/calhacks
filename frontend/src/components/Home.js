@@ -1,37 +1,43 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Image } from "react";
+import ang from "../assets/characters/ang.png";
+import hiro from "../assets/characters/hiro.png";
+
+const characters = [
+  { name: "Ang", src: ang },
+  { name: "Hiro", src: hiro },
+];
 
 function Home() {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] = useState("");
   const [image, setImage] = useState(null);
-  const recognitionRef = useRef(null); // Using useRef to manage recognition instance
+  const [selectedCharacter, setSelectedCharacter] = useState(characters[0]); // Default character
+  const [showModal, setShowModal] = useState(false);
+
+  const recognitionRef = useRef(null);
 
   const createRecognitionInstance = () => {
     const recognition = new window.webkitSpeechRecognition();
-    recognition.continuous = true; // Keep listening until explicitly stopped
-    recognition.interimResults = true; // Provide partial results
-    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
 
     recognition.onresult = (event) => {
-      let speechResult = '';
+      let speechResult = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcriptPart = event.results[i][0].transcript;
         speechResult += transcriptPart;
       }
-      console.log('Transcript: ', speechResult);
       setTranscript(speechResult);
     };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      stopRecognition(); // Ensure we stop on errors
+      console.error("Speech recognition error:", event.error);
+      stopRecognition();
     };
 
     recognition.onend = () => {
-      console.log('Recognition ended.');
-      if (isRecording) {
-        recognition.start(); // Restart if still recording
-      }
+      if (isRecording) recognition.start();
     };
 
     return recognition;
@@ -41,25 +47,19 @@ function Home() {
     recognitionRef.current = createRecognitionInstance();
     recognitionRef.current.start();
     setIsRecording(true);
-    console.log('Started recording.');
   };
 
   const stopRecognition = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.onend = null; // Prevent auto-restart
+      recognitionRef.current.onend = null;
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
     setIsRecording(false);
-    console.log('Stopped recording.');
   };
 
   const handleMicrophoneClick = () => {
-    if (isRecording) {
-      stopRecognition();
-    } else {
-      startRecognition();
-    }
+    isRecording ? stopRecognition() : startRecognition();
   };
 
   const handleImageUpload = (event) => {
@@ -71,6 +71,14 @@ function Home() {
     }
   };
 
+  const openModal = () => setShowModal(true);
+  const closeModal = () => setShowModal(false);
+
+  const selectCharacter = (character) => {
+    setSelectedCharacter(character);
+    closeModal();
+  };
+
   return (
     <div style={styles.container}>
       <header style={styles.header}>Welcome to EduPal.ai</header>
@@ -79,7 +87,7 @@ function Home() {
           <div
             style={{
               ...styles.circle,
-              backgroundColor: isRecording ? '#ff4d4d' : '#f0f0f0',
+              backgroundColor: isRecording ? "#ff4d4d" : "#f0f0f0",
             }}
           >
             <img
@@ -88,7 +96,9 @@ function Home() {
             />
           </div>
         </button>
-        <div style={styles.text}>{isRecording ? 'Listening...' : 'Click to Talk'}</div>
+        <div style={styles.text}>
+          {isRecording ? "Listening..." : "Click to Talk"}
+        </div>
 
         {transcript && (
           <div style={styles.transcriptBox}>
@@ -103,7 +113,42 @@ function Home() {
             onChange={handleImageUpload}
             style={styles.uploadButton}
           />
-          {image && <img src={image} alt="Uploaded" style={styles.previewImage} />}
+          {image && (
+            <img src={image} alt="Uploaded" style={styles.previewImage} />
+          )}
+        </div>
+
+        <div style={styles.characterContainer}>
+          <div style={styles.characterWrapper}>
+            <img
+              src={selectedCharacter.src}
+              alt={selectedCharacter.name}
+              style={styles.characterImage}
+            />
+          </div>
+          <div>
+            <button onClick={openModal} style={styles.changeCharacterButton}>
+              Change Character
+            </button>
+          </div>
+
+          {showModal && (
+            <div style={styles.modal}>
+              <h2>Select a Character</h2>
+              {characters.map((char) => (
+                <div
+                  key={char.name}
+                  style={styles.characterOption}
+                  onClick={() => selectCharacter(char)}
+                >
+                  <p>{char.name}</p>
+                </div>
+              ))}
+              <button onClick={closeModal} style={styles.closeModalButton}>
+                Close
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -112,77 +157,108 @@ function Home() {
 
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: '100vh',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    height: "100vh",
+    position: "relative", // Allows absolute positioning for character
   },
   header: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    margin: '20px 0',
-    position: 'absolute',
-    top: '20px',
-    textAlign: 'center',
-    width: '100%',
+    fontSize: "24px",
+    fontWeight: "bold",
+    margin: "20px 0",
+    position: "absolute",
+    top: "20px",
+    textAlign: "center",
+    width: "100%",
   },
   content: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
     flex: 1,
   },
+  characterContainer: {
+    position: "absolute",
+    right: "20px", // Push character to the right
+    top: "80px", // Start just below the header
+    bottom: "85px", // Align with the "Choose File" button
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "space-between",
+    textAlign: "center",
+  },
+  characterWrapper: {
+    width: "250px", // Standardize width for all characters
+    height: "400px", // Standardize height for all characters
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden", // Ensure content stays within the box
+    backgroundColor: "#f5f5f5", // Optional background for consistency
+    borderRadius: "12px", // Optional rounded corners
+  },
+  characterImage: {
+    width: "100%", // Ensure it fills the width of the container
+    height: "100%", // Ensure it fills the height of the container
+    objectFit: "contain", // Preserve aspect ratio without distortion
+  },
+  changeCharacterButton: {
+    marginTop: "10px",
+    padding: "10px 20px",
+    fontSize: "16px",
+    cursor: "pointer",
+    border: "none",
+    borderRadius: "8px",
+    backgroundColor: "grey",
+    color: "white",
+  },
   button: {
-    border: 'none',
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    marginBottom: '10px',
+    border: "none",
+    backgroundColor: "transparent",
+    cursor: "pointer",
+    marginBottom: "10px",
     padding: 0,
+    color: "grey",
   },
   circle: {
-    width: '100px',
-    height: '100px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'background-color 0.3s ease',
+    width: "100px",
+    height: "100px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "background-color 0.3s ease",
   },
   text: {
-    fontSize: '18px',
-    marginTop: '10px',
+    fontSize: "18px",
+    marginTop: "10px",
   },
   transcriptBox: {
-    marginTop: '20px',
-    width: '80%',
-    maxWidth: '500px',
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '15px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center',
-  },
-  transcriptText: {
-    fontSize: '16px',
-    fontStyle: 'italic',
-    margin: 0,
-    color: '#333',
+    marginTop: "20px",
+    width: "80%",
+    maxWidth: "500px",
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    padding: "15px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    textAlign: "center",
   },
   uploadContainer: {
-    marginTop: '30px',
-    textAlign: 'center',
+    marginTop: "30px",
+    textAlign: "center",
   },
   uploadButton: {
-    marginBottom: '15px',
-    cursor: 'pointer',
+    marginBottom: "15px",
+    cursor: "pointer",
   },
   previewImage: {
-    maxWidth: '300px',
-    maxHeight: '300px',
-    objectFit: 'contain',
-    marginTop: '10px',
+    maxWidth: "300px",
+    maxHeight: "300px",
+    objectFit: "contain",
+    marginTop: "10px",
   },
 };
 
