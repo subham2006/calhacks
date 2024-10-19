@@ -57,10 +57,15 @@ function Home() {
       <header style={styles.header}>Welcome to EduPal.ai</header>
       <div style={styles.content}>
         <button onClick={handleMicrophoneClick} style={styles.button}>
-          <div style={styles.circle}>
-            <img 
-              src="https://img.icons8.com/ios-filled/50/microphone.png" 
-              alt="Microphone Icon" 
+          <div
+            style={{
+              ...styles.circle,
+              backgroundColor: isRecording ? '#ff4d4d' : '#f0f0f0',
+            }}
+          >
+            <img
+              src="https://img.icons8.com/ios-filled/50/microphone.png"
+              alt="Microphone Icon"
             />
           </div>
         </button>
@@ -68,11 +73,11 @@ function Home() {
         {transcript && <div style={styles.transcript}>You said: {transcript}</div>}
 
         <div style={styles.uploadContainer}>
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={handleImageUpload} 
-            style={styles.uploadButton} 
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={styles.uploadButton}
           />
           {image && <img src={image} alt="Uploaded" style={styles.previewImage} />}
         </div>
@@ -116,10 +121,10 @@ const styles = {
     width: '100px',
     height: '100px',
     borderRadius: '50%',
-    backgroundColor: '#f0f0f0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    transition: 'background-color 0.3s ease',
   },
   text: {
     fontSize: '18px',
