@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
-import About from './components/About'
+import About from './components/About';
+import Interact from './components/Interact'; // Drawing component
+import QRCodeInteraction from './components/QRCodeInteraction'; // QR code component
 import './App.css';
 
 function App() {
+  const [connected, setConnected] = useState(false);
+
+  const handleConnect = () => setConnected(true);
+
   return (
     <Router>
       <div className="App">
@@ -13,6 +19,16 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route
+            path="/connect"
+            element={
+              !connected ? (
+                <QRCodeInteraction onConnect={handleConnect} />
+              ) : (
+                <Interact />
+              )
+            }
+          />
         </Routes>
       </div>
     </Router>
