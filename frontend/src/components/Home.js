@@ -106,7 +106,7 @@ function Home() {
           mode: "id",
           id: voiceId, // Use the voice ID from the character's map
         },
-        transcript: text || "Hello, world!", // Default message if text is empty
+        transcript: text || "i am strong", // Default message if text is empty
       });
 
       // Extract the audio source from the response
@@ -171,7 +171,7 @@ function Home() {
     setCollectedTranscript("");
     setIsRecording(false);
 
-    playTTS("helloworld", selectedCharacter);
+    playTTS("i am strong", selectedCharacter);
   };
 
   const addToChatHistory = (role, content, sentiment, sentimentScore) => {
