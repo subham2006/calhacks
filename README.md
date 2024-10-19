@@ -19,5 +19,7 @@
 Create a .env file in the frontend and backend directory and add the following:
 
 REACT_APP_LOCAL_IP = 'YOUR_IP_ADDRESS'
+
 You can get your IP address by running `ipconfig getifaddr en0` in the terminal.
+
 Alteratively, when you run `npm start`, the terminal will print your IP address.
