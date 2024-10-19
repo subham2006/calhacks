@@ -9,15 +9,22 @@ function Home() {
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
       const newRecognition = new window.webkitSpeechRecognition();
-      newRecognition.continuous = false;
-      newRecognition.interimResults = false;
+      newRecognition.continuous = true;
+      newRecognition.interimResults = true;
       newRecognition.lang = 'en-US';
 
       newRecognition.onresult = (event) => {
-        const speechResult = event.results[0][0].transcript;
+        const speechResult = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ');
         console.log('Transcript: ', speechResult);
         setTranscript(speechResult);
-        setIsRecording(false);
+      };
+
+      newRecognition.onend = () => {
+        if (isRecording) {
+          newRecognition.start();
+        }
       };
 
       newRecognition.onerror = (event) => {
@@ -29,7 +36,7 @@ function Home() {
     } else {
       console.warn('Web Speech API is not supported in this browser.');
     }
-  }, []);
+  }, [isRecording]);
 
   const handleMicrophoneClick = () => {
     if (recognition) {
@@ -70,7 +77,12 @@ function Home() {
           </div>
         </button>
         <div style={styles.text}>{isRecording ? 'Listening...' : 'Click to Talk'}</div>
-        {transcript && <div style={styles.transcript}>You said: {transcript}</div>}
+
+        {transcript && (
+          <div style={styles.transcriptBox}>
+            <p style={styles.transcriptText}>{transcript}</p>
+          </div>
+        )}
 
         <div style={styles.uploadContainer}>
           <input
@@ -128,11 +140,23 @@ const styles = {
   },
   text: {
     fontSize: '18px',
+    marginTop: '10px',
   },
-  transcript: {
+  transcriptBox: {
     marginTop: '20px',
+    width: '80%',
+    maxWidth: '500px',
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '15px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    textAlign: 'center',
+  },
+  transcriptText: {
     fontSize: '16px',
     fontStyle: 'italic',
+    margin: 0,
+    color: '#333',
   },
   uploadContainer: {
     marginTop: '30px',
