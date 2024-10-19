@@ -1,52 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [recognition, setRecognition] = useState(null);
   const [image, setImage] = useState(null);
+  const recognitionRef = useRef(null); // Using useRef to manage recognition instance
 
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window) {
-      const newRecognition = new window.webkitSpeechRecognition();
-      newRecognition.continuous = true;
-      newRecognition.interimResults = true;
-      newRecognition.lang = 'en-US';
+  const createRecognitionInstance = () => {
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = true; // Keep listening until explicitly stopped
+    recognition.interimResults = true; // Provide partial results
+    recognition.lang = 'en-US';
 
-      newRecognition.onresult = (event) => {
-        const speechResult = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join(' ');
-        console.log('Transcript: ', speechResult);
-        setTranscript(speechResult);
-      };
+    recognition.onresult = (event) => {
+      let speechResult = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcriptPart = event.results[i][0].transcript;
+        speechResult += transcriptPart;
+      }
+      console.log('Transcript: ', speechResult);
+      setTranscript(speechResult);
+    };
 
-      newRecognition.onend = () => {
-        if (isRecording) {
-          newRecognition.start();
-        }
-      };
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      stopRecognition(); // Ensure we stop on errors
+    };
 
-      newRecognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsRecording(false);
-      };
+    recognition.onend = () => {
+      console.log('Recognition ended.');
+      if (isRecording) {
+        recognition.start(); // Restart if still recording
+      }
+    };
 
-      setRecognition(newRecognition);
-    } else {
-      console.warn('Web Speech API is not supported in this browser.');
+    return recognition;
+  };
+
+  const startRecognition = () => {
+    recognitionRef.current = createRecognitionInstance();
+    recognitionRef.current.start();
+    setIsRecording(true);
+    console.log('Started recording.');
+  };
+
+  const stopRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null; // Prevent auto-restart
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
-  }, [isRecording]);
+    setIsRecording(false);
+    console.log('Stopped recording.');
+  };
 
   const handleMicrophoneClick = () => {
-    if (recognition) {
-      if (isRecording) {
-        recognition.stop();
-        setIsRecording(false);
-      } else {
-        recognition.start();
-        setIsRecording(true);
-      }
+    if (isRecording) {
+      stopRecognition();
+    } else {
+      startRecognition();
     }
   };
 
