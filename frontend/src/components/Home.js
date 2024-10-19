@@ -1,65 +1,190 @@
-import React, { useState, useEffect, useRef, Image } from "react";
+import React, { useState, useRef } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
+import Cartesia from "@cartesia/cartesia-js";
 
+// Replace with your Deepgram API key
+const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
+const cartesiaAPIKey = process.env.REACT_APP_CARTESIA_API_KEY;
+const cartesia = new Cartesia({
+  apiKey: cartesiaAPIKey, // Replace with your actual API key
+});
+
+// Characters array
 const characters = [
   { name: "Ang", src: ang },
   { name: "Hiro", src: hiro },
 ];
 
+// Character Voices Map
+const characterVoices = {
+  Ang: "a0e99841-438c-4a64-b679-ae501e7d6091", // Example voice ID for Ang
+  Hiro: "03496517-369a-4db1-8236-3d3ae459ddf7", // Example voice ID for Hiro
+};
+
 function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [collectedTranscript, setCollectedTranscript] = useState(""); // Store segments here
+  const [sentiment, setSentiment] = useState("neutral"); // Store sentiment
+  const [sentimentScore, setSentimentScore] = useState(0); // Store sentiment score
   const [image, setImage] = useState(null);
-  const [selectedCharacter, setSelectedCharacter] = useState(characters[0]); // Default character
+  const [selectedCharacter, setSelectedCharacter] = useState(characters[0]);
   const [showModal, setShowModal] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]); // Chat history array
 
-  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const socketRef = useRef(null); // Store WebSocket reference
 
-  const createRecognitionInstance = () => {
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
+  const startDeepgramStream = async () => {
+    const socket = new WebSocket(
+      `wss://api.deepgram.com/v1/listen?punctuate=true&model=enhanced&sentiment=true`,
+      ["token", deepgramApiKey]
+    );
 
-    recognition.onresult = (event) => {
-      let speechResult = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcriptPart = event.results[i][0].transcript;
-        speechResult += transcriptPart;
+    socketRef.current = socket; // Store the socket
+
+    socket.onopen = () => {
+      console.log("Connected to Deepgram WebSocket!");
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.start(250); // Send audio every 250ms
+
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          socket.send(event.data); // Stream audio to Deepgram
+        };
+      });
+    };
+
+    socket.onmessage = (message) => {
+      try {
+        const data = JSON.parse(message.data);
+
+        const newSegment = data.channel?.alternatives?.[0]?.transcript || "";
+        const newSentiment = data.sentiments?.average?.sentiment || "neutral";
+        const newSentimentScore =
+          data.sentiments?.average?.sentiment_score || 0;
+
+        console.log(`Transcript Segment: ${newSegment}`);
+        console.log(`Sentiment: ${newSentiment} (Score: ${newSentimentScore})`);
+
+        // Accumulate transcript segments
+        setCollectedTranscript((prev) => prev + " " + newSegment);
+
+        // Save the latest sentiment values
+        setSentiment(newSentiment);
+        setSentimentScore(newSentimentScore);
+      } catch (error) {
+        console.error("Error processing message:", error);
       }
-      setTranscript(speechResult);
     };
 
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      stopRecognition();
-    };
+    socket.onclose = () => console.log("WebSocket closed.");
+    socket.onerror = (error) => console.error("WebSocket error:", error);
 
-    recognition.onend = () => {
-      if (isRecording) recognition.start();
-    };
-
-    return recognition;
-  };
-
-  const startRecognition = () => {
-    recognitionRef.current = createRecognitionInstance();
-    recognitionRef.current.start();
     setIsRecording(true);
   };
 
-  const stopRecognition = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.onend = null;
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+  const playTTS = async (text, character) => {
+    const voiceId = characterVoices[character.name] || "default-voice-id"; // Fallback voice
+
+    try {
+      // Set up the WebSocket connection with the appropriate audio format
+      const websocket = cartesia.tts.websocket({
+        container: "raw",
+        encoding: "pcm_f32le",
+        sampleRate: 44100,
+      });
+
+      // Connect to the WebSocket
+      await websocket.connect();
+
+      // Send the TTS request with the selected character's voice
+      const response = await websocket.send({
+        model_id: "sonic-english", // Example model, adjust if necessary
+        voice: {
+          mode: "id",
+          id: voiceId, // Use the voice ID from the character's map
+        },
+        transcript: text || "Hello, world!", // Default message if text is empty
+      });
+
+      // Extract the audio source from the response
+      const { source } = response;
+
+      // Create an AudioContext for playback
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      const buffer = new Float32Array(source.durationToSampleCount(1));
+
+      let audioData = [];
+
+      // Read the audio stream and collect PCM data
+      while (true) {
+        const read = await source.read(buffer);
+        audioData.push(...buffer.subarray(0, read));
+        if (read < buffer.length) break; // No more audio to read
+      }
+
+      // Convert PCM data to AudioBuffer for playback
+      const audioBuffer = audioContext.createBuffer(1, audioData.length, 44100);
+      audioBuffer.getChannelData(0).set(audioData);
+
+      // Create a buffer source for playback
+      const sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.connect(audioContext.destination);
+
+      // Play the audio
+      sourceNode.start();
+
+      // Disconnect WebSocket after use
+      websocket.disconnect();
+    } catch (error) {
+      console.error("Error playing TTS:", error);
     }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
+    }
+
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+
+    // Add the collected transcript and sentiment to chat history
+    if (collectedTranscript.trim()) {
+      addToChatHistory(
+        "user",
+        collectedTranscript.trim(),
+        sentiment,
+        sentimentScore
+      );
+    }
+
+    // Reset collected transcript
+    setCollectedTranscript("");
     setIsRecording(false);
+
+    playTTS("helloworld", selectedCharacter);
+  };
+
+  const addToChatHistory = (role, content, sentiment, sentimentScore) => {
+    const newEntry = { role, content, sentiment, sentimentScore };
+    setChatHistory((prevHistory) => {
+      const updatedHistory = [...prevHistory, newEntry];
+      console.log("Updated Chat History:", updatedHistory); // Log the updated history
+      return updatedHistory;
+    });
   };
 
   const handleMicrophoneClick = () => {
-    isRecording ? stopRecognition() : startRecognition();
+    isRecording ? stopRecording() : startDeepgramStream();
   };
 
   const handleImageUpload = (event) => {
@@ -82,6 +207,7 @@ function Home() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>Welcome to EduPal.ai</header>
+
       <div style={styles.content}>
         <button onClick={handleMicrophoneClick} style={styles.button}>
           <div
@@ -126,11 +252,9 @@ function Home() {
               style={styles.characterImage}
             />
           </div>
-          <div>
-            <button onClick={openModal} style={styles.changeCharacterButton}>
-              Change Character
-            </button>
-          </div>
+          <button onClick={openModal} style={styles.changeCharacterButton}>
+            Change Character
+          </button>
 
           {showModal && (
             <div style={styles.modal}>
@@ -149,6 +273,20 @@ function Home() {
               </button>
             </div>
           )}
+        </div>
+
+        <div>
+          <h3>Chat History:</h3>
+          <ul>
+            {chatHistory.map((entry, index) => (
+              <li key={index}>
+                <strong>{entry.role}:</strong> {entry.content}
+                <br />
+                Sentiment: {entry.sentiment} (Score:{" "}
+                {entry.sentimentScore.toFixed(2)})
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
