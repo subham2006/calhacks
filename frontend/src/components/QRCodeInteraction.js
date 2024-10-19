@@ -3,7 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react'; // Import the right component
 
 const QRCodeInteraction = ({ onConnect }) => {
   const [qrCodeData, setQRCodeData] = useState('');
-  const localIP = "172.20.10.13"; // Ensure this is the correct IP
+  const localIP = process.env.REACT_APP_LOCAL_IP || '172.20.10.13'; // Use IP from env file or fallback
   const url = `http://${localIP}:3000/connect`;
 
   useEffect(() => {

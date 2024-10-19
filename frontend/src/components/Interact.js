@@ -9,7 +9,7 @@ const Interact = () => {
 
   // Set up WebSocket and canvas context
   useEffect(() => {
-    const socket = new WebSocket('ws://172.20.10.13:8080'); // Replace with your IP
+    const socket = new WebSocket(`ws://${process.env.REACT_APP_LOCAL_IP}:8080`);
     setWs(socket);
 
     const canvas = canvasRef.current;
@@ -96,7 +96,7 @@ const Interact = () => {
     sendDrawingData(0, 0, 'clear'); // Send 'clear' event to other clients
   };
 
-  const localIP = '172.20.10.13'; // Replace with your IP address
+  const localIP = process.env.REACT_APP_LOCAL_IP || '172.20.10.13'; // Fallback to default if not set
   const url = `http://${localIP}:3000/connect`;
 
   return (
