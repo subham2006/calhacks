@@ -18,7 +18,6 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
           <Route
             path="/connect"
             element={
@@ -29,6 +28,7 @@ function App() {
               )
             }
           />
+          <Route path="/about" element={<About />} />
         </Routes>
       </div>
     </Router>

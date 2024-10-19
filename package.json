@@ -1,0 +1,15 @@
+{
+  "name": "calhacks",
+  "version": "1.0.0",
+  "description": "Root package for CalHacks project",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && node server.js",
+    "frontend": "cd frontend && npm start"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

@@ -99,6 +99,24 @@ const Interact = () => {
   const localIP = process.env.REACT_APP_LOCAL_IP || '172.20.10.13'; // Fallback to default if not set
   const url = `http://${localIP}:3000/connect`;
 
+  const captureCanvas = () => {
+    const canvas = canvasRef.current;
+    return canvas.toDataURL('image/png');
+  };
+
+  const analyzeCanvas = async () => {
+    const imageData = captureCanvas();
+    const response = await fetch('http://localhost:3001/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ imageData }),
+    });
+    const result = await response.json();
+    alert(`Analysis: ${result.analysis}`);
+  };
+
   return (
     <div>
       <h1>Drawing App</h1>
@@ -126,6 +144,10 @@ const Interact = () => {
 
       <button onClick={handleClear} style={{ marginTop: '20px' }}>
         Clear Whiteboard
+      </button>
+
+      <button onClick={analyzeCanvas} style={{ marginTop: '20px' }}>
+        Analyze Canvas
       </button>
     </div>
   );

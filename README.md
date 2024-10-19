@@ -1,5 +1,11 @@
 # Getting Started
 
+## Install & Start
+
+##### `npm install`
+##### `npm start`
+
+# Deprecated
 ## Install & Start Frontend
 
 ##### `git clone git@github.com:subham2006/calhacks.git`
