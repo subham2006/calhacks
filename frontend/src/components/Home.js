@@ -7,6 +7,8 @@ import jasmineBackground from "../assets/backgrounds/aladdinBackground.jpg";
 import Whiteboard from "./Whiteboard.tsx";
 import "tldraw/tldraw.css";
 import { AIContext } from './AIContext';
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
@@ -49,6 +51,10 @@ function Home() {
   const socketRef = useRef(null); // Store WebSocket reference
 
   const isIpad = /iPad/i.test(navigator.userAgent); // Detect if the device is an iPad
+
+  const renderMathExpression = (text) => {
+    return <Latex>{text}</Latex>;
+  };
 
   const startDeepgramStream = async () => {
     const socket = new WebSocket(
@@ -310,9 +316,8 @@ function Home() {
               </div>
             )}
             <div style={styles.modal}>
-            <h3>AI Analysis Output</h3>
-            <p>{aiResponse || "AI output will appear here."}</p>
-          </div>
+            {aiResponse ? renderMathExpression(aiResponse) : "AI output will appear here."}
+            </div>
           </div>
         </div>
       )}

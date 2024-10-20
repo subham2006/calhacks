@@ -9,6 +9,7 @@ import Interact from './components/Interact';
 import QRCodeInteraction from './components/QRCodeInteraction';
 import Whiteboard from './components/Whiteboard.tsx';
 import './App.css';
+import 'katex/dist/katex.min.css';
 
 function App() {
   const [connected, setConnected] = useState(false);
