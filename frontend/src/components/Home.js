@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import aang from "../assets/characters/ang.png";
+import React, { useState, useRef, useEffect } from "react";
+import aang from "../assets/characters/aang2.png";
 import hiro from "../assets/characters/hiro.png";
 import angBackground from "../assets/backgrounds/avatarBackground.jpg";
 import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
@@ -9,6 +9,7 @@ import "tldraw/tldraw.css";
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
+import "./SpeechBubble.css";
 
 // Replace with your Deepgram API key
 const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
@@ -41,6 +42,8 @@ function Home() {
   const [selectedCharacter, setSelectedCharacter] = useState(characters[1]);
   const [showModal, setShowModal] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechBubbleText, setSpeechBubbleText] = useState("");
 
   const mediaRecorderRef = useRef(null);
   const socketRef = useRef(null); // Store WebSocket reference
@@ -95,6 +98,9 @@ function Home() {
   };
 
   const playTTS = async (text, character, speed, emotion) => {
+    setIsSpeaking(true);
+    setSpeechBubbleText(text);
+
     const voiceId = characterVoices[character.name] || "default-voice-id"; // Fallback voice
 
     try {
@@ -149,10 +155,18 @@ function Home() {
       // Play the audio
       sourceNode.start();
 
+      // Set up an event listener for when the audio finishes playing
+      sourceNode.onended = () => {
+        setIsSpeaking(false);
+        setSpeechBubbleText("");
+      };
+
       // Disconnect WebSocket after use
       websocket.disconnect();
     } catch (error) {
       console.error("Error playing TTS:", error);
+      setIsSpeaking(false);
+      setSpeechBubbleText("");
     }
   };
 
@@ -183,7 +197,7 @@ function Home() {
     setIsRecording(false);
 
     playTTS(
-      "that's really interesting, can you tell me more?",
+      "that's really interesting, can you tell me more? I really need you tell me a lot more so that this sentence takes up way more space, thanks so much for telling me such an interesting thing thats really really awesome",
       selectedCharacter
     );
   };
@@ -301,6 +315,11 @@ function Home() {
           )}
         </div>
       </div>
+      {isSpeaking && (
+        <div className="speech-bubble" style={styles.speechBubblePosition}>
+          <p style={styles.speechBubbleText}>{speechBubbleText}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -366,6 +385,7 @@ const styles = {
     overflow: "hidden",
     borderRadius: "12px",
     marginBottom: "20px",
+    position: "relative",
   },
   characterImage: {
     width: "100%",
@@ -394,8 +414,8 @@ const styles = {
     marginBottom: "10px",
   },
   microphoneCircle: {
-    width: "80px",
-    height: "80px",
+    width: "100px",
+    height: "100px",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -451,6 +471,17 @@ const styles = {
     borderRadius: "4px",
     backgroundColor: "#f0f0f0",
     color: "black",
+  },
+  speechBubblePosition: {
+    position: "fixed",
+    top: "20%",
+    left: "70%", // Changed from 50% to 70% to shift right
+    transform: "translateX(-50%)",
+    zIndex: 1000,
+  },
+  speechBubbleText: {
+    margin: 0,
+    fontSize: "14px",
   },
 };
 
