@@ -3,9 +3,11 @@ import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
 import angBackground from "../assets/backgrounds/avatarBackground.jpg";
 import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
+import jasmineBackground from "../assets/backgrounds/aladdinBackground.jpg";
 import Whiteboard from "./Whiteboard.tsx";
 import "tldraw/tldraw.css";
 
+import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
 
 // Replace with your Deepgram API key
@@ -19,12 +21,14 @@ const cartesia = new Cartesia({
 const characters = [
   { name: "Ang", src: ang, background: angBackground },
   { name: "Hiro", src: hiro, background: hiroBackground },
+  { name: "Jasmine", src: jasmine, background: jasmineBackground }
 ];
 
 // Character Voices Map
 const characterVoices = {
-  Ang: "a0e99841-438c-4a64-b679-ae501e7d6091", // Example voice ID for Ang
-  Hiro: "03496517-369a-4db1-8236-3d3ae459ddf7", // Example voice ID for Hiro
+  Ang: "37172f13-c9fe-47f1-aef0-3bd60836a5bf",
+  Hiro: "211be958-0aea-490f-8a13-4ada04de9353",
+  Jasmine: "6377eebe-ae73-44e0-854a-229fba6e76c8",
 };
 
 function Home() {
@@ -90,7 +94,7 @@ function Home() {
     setIsRecording(true);
   };
 
-  const playTTS = async (text, character) => {
+  const playTTS = async (text, character, speed, emotion) => {
     const voiceId = characterVoices[character.name] || "default-voice-id"; // Fallback voice
 
     try {
@@ -108,10 +112,12 @@ function Home() {
       const response = await websocket.send({
         model_id: "sonic-english", // Example model, adjust if necessary
         voice: {
+          speed: speed || "normal",
+          emotion: emotion || "neutral",
           mode: "id",
           id: voiceId, // Use the voice ID from the character's map
         },
-        transcript: text || "i am strong", // Default message if text is empty
+        transcript: text || "that's really interesting can you tell me more?", // Default message if text is empty
       });
 
       // Extract the audio source from the response
@@ -176,7 +182,10 @@ function Home() {
     setCollectedTranscript("");
     setIsRecording(false);
 
-    playTTS("i am strong", selectedCharacter);
+    playTTS(
+      "that's really interesting, can you tell me more?",
+      selectedCharacter
+    );
   };
 
   const addToChatHistory = (role, content, sentiment, sentimentScore) => {
