@@ -342,7 +342,11 @@ function Home() {
                 />
               </div>
               <button onClick={openModal} style={styles.changeCharacterButton}>
-                Change Character
+                <img
+                  src="https://www.svgrepo.com/show/440721/drawer-character-change.svg"
+                  alt="Change Character"
+                  style={{ width: "30px", height: "30px" }} // Adjust icon size
+                />
               </button>
             </div>
             <div style={styles.interactionArea}>
@@ -487,13 +491,22 @@ const styles = {
     objectFit: "contain",
   },
   changeCharacterButton: {
-    padding: "12px 12px",
-    fontSize: "18px",
+    position: "fixed",
+    bottom: "20px",
+    right: "20px",
+    width: "60px",
+    height: "60px",
+    borderRadius: "50%",
+    backgroundColor: "#ffffff",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "24px",
     cursor: "pointer",
     border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#007bff",
-    color: "white",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+    zIndex: 1000,
   },
   interactionArea: {
     display: "flex",
@@ -506,19 +519,26 @@ const styles = {
     backgroundColor: "transparent",
     cursor: "pointer",
     marginBottom: "10px",
+    width: "75px", // Match width
+    height: "75px", // Match height
+    borderRadius: "50%", // Match border radius
+    display: "flex", // Match display
+    alignItems: "center", // Match alignment
+    justifyContent: "center", // Match justification
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Match shadow
   },
   microphoneCircle: {
-    width: "100px",
-    height: "100px",
-    borderRadius: "50%",
+    width: "75px", // Match width
+    height: "75px", // Match height
+    borderRadius: "50%", // Match border radius
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     transition: "background-color 0.3s ease",
   },
   microphoneIcon: {
-    width: "40px",
-    height: "40px",
+    width: "30px",
+    height: "30px",
   },
   microphoneText: {
     fontSize: "18px",
@@ -539,10 +559,9 @@ const styles = {
     marginTop: "20px",
   },
   modal: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
+    position: "fixed",
+    bottom: "100px", // Position it near the bottom
+    right: "20px", // Align it with the button
     backgroundColor: "white",
     padding: "20px",
     borderRadius: "8px",
