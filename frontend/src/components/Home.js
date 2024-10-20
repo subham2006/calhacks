@@ -214,6 +214,7 @@ function Home() {
     }
 
     var characterResponse = "";
+    var detectedEmotion = "";
 
     // Immediately stop the recording indicator
     setIsRecording(false);
@@ -238,7 +239,7 @@ function Home() {
     };
 
     const base64Image = await handleExtractImage();
-
+    
     console.log("TRANSCRIPT:", collectedTranscript.trim());
 
     persistentTranscript.current.push(collectedTranscript.trim());
@@ -249,8 +250,10 @@ function Home() {
           transcript: persistentTranscript.current,
           base64Image: base64Image,
         })
-      characterResponse = response.data.chatgpt_response;
-      console.log("HERE IS THE RESPONSE", response.data);
+      const { chatgpt_response, emotion } = response.data;
+      characterResponse = chatgpt_response;
+      detectedEmotion = emotion;
+      console.log("emotion", detectedEmotion);
       setAiResponse(response.data.chatgpt_response);
     } catch (error) {
       console.log(error);
@@ -272,7 +275,9 @@ function Home() {
 
     playTTS(
       characterResponse,
-      selectedCharacter
+      selectedCharacter,
+      "normal",
+      detectedEmotion
     );
   };
 
