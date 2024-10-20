@@ -77,7 +77,6 @@ const Whiteboard = () => {
         components={components}
         assetUrls={customAssetUrls}
         store={store} // Pass the store to Tldraw for collaboration
-        style={{ width: "100%", height: "100%" }} // Ensure Tldraw takes full width and height
       />
     </div>
   );

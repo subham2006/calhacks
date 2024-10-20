@@ -306,6 +306,17 @@ function Home() {
                 </button>
               </div>
             )}
+            <div style={styles.modal}>
+              <h3>Hello. This is the output of the AI</h3>
+
+
+
+
+
+
+            
+
+            </div>
           </div>
         </div>
       )}
