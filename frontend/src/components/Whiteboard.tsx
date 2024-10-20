@@ -64,16 +64,27 @@ export const customAssetUrls: TLUiAssetUrlOverrides = {
 };
 
 const customTools = [AITool];
-const Whiteboard = () => {
+const Whiteboard = ({ updateEditor }) => {
   return (
-    <div style={{ width: "100%", height: "100%", padding: "20px", backgroundColor: "#f9f9f9", borderRadius: "8px", boxShadow: "0 0 10px rgba(0,0,0,0.1)" }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        padding: "20px",
+        backgroundColor: "#f9f9f9",
+        borderRadius: "8px",
+        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+      }}
+    >
       <Tldraw
+        onMount={(editor) => {
+          updateEditor(editor);
+        }}
         tools={customTools}
         initialState="sticker"
         overrides={uiOverrides}
         components={components}
         assetUrls={customAssetUrls}
-        style={{ width: "100%", height: "100%" }} // Ensure Tldraw takes full width and height
       />
     </div>
   );

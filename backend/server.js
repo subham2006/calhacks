@@ -16,7 +16,8 @@ const openai = new OpenAI();
 // Routes
 app.post('/analyze-whiteboard', async (req, res) => {
     try {
-        const { base64Image } = req.body;
+        const { base64Image, transcript } = req.body;
+        console.log("TRANSCRIPT", transcript);
 
         if (!base64Image) {
             return res.status(400).json({ error: 'No image provided' });
