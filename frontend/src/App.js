@@ -14,26 +14,26 @@ function App() {
   const handleConnect = () => setConnected(true);
 
   return (
-    <Router>
-      <div className="App">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/whiteboard" element={<Whiteboard />} />
-          <Route
-            path="/connect"
-            element={
-              !connected ? (
-                <QRCodeInteraction onConnect={handleConnect} />
-              ) : (
-                <Interact />
-              )
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
+      <Router>
+        <div className="App">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />}/>
+            <Route path="/about" element={<About />} />
+            <Route path="/whiteboard" element={<Whiteboard />} />
+            <Route
+              path="/connect"
+              element={
+                !connected ? (
+                  <QRCodeInteraction onConnect={handleConnect} />
+                ) : (
+                  <Interact />
+                )
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
   );
 }
 

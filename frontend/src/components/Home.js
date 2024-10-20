@@ -5,10 +5,14 @@ import angBackground from "../assets/backgrounds/avatarBackground.jpg";
 import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
 import jasmineBackground from "../assets/backgrounds/aladdinBackground.jpg";
 import Whiteboard from "./Whiteboard.tsx";
+import { exportToBlob } from "tldraw";
 import "tldraw/tldraw.css";
+import axios from "axios";
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
+
+import AITool from "./AITool.ts";
 import "./SpeechBubble.css";
 
 // Replace with your Deepgram API key
@@ -42,6 +46,12 @@ function Home() {
   const [selectedCharacter, setSelectedCharacter] = useState(characters[1]);
   const [showModal, setShowModal] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
+
+  const [editor, setEditor] = useState(null);
+
+  const handleSetEditor = (editorVal) => {
+    setEditor(editorVal);
+  }
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechBubbleText, setSpeechBubbleText] = useState("");
 
@@ -172,7 +182,7 @@ function Home() {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream
@@ -182,6 +192,39 @@ function Home() {
 
     if (socketRef.current) {
       socketRef.current.close();
+    }
+
+    const handleExtractImage = async () => {
+      const shapeIds = editor.getCurrentPageShapeIds();
+      if (shapeIds.size === 0) return alert("Nothing on the canvas");
+      const blob = await exportToBlob({
+        editor: editor,
+        ids: [...shapeIds],
+        format: "png",
+        opts: { background: false },
+      });
+
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      const base64Image = await new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result);
+      });
+
+      return base64Image;
+    }
+
+    const base64Image = await handleExtractImage();
+    console.log("BASE64 IMAGE", base64Image);
+
+    try {
+      const response = await axios.post("http://localhost:3001/analyze-whiteboard",
+        {
+          transcript: collectedTranscript.trim(),
+          base64Image: base64Image,
+        })
+      console.log("HERE IS THE RESPONSE", response.data);
+    } catch (error) {
+      console.log(error);
     }
 
     // Add the collected transcript and sentiment to chat history
@@ -246,13 +289,13 @@ function Home() {
     >
       {isIpad ? ( // Conditional rendering based on device type
         <div style={{ width: "100%", height: "100%" }}>
-          <Whiteboard />
+          <Whiteboard updateEditor={handleSetEditor} />
         </div>
       ) : (
         <div style={styles.mainContent}>
           <div style={styles.leftPanel}>
             <div style={styles.whiteboardContainer}>
-              <Whiteboard />
+              <Whiteboard updateEditor={handleSetEditor} />
             </div>
           </div>
           <div style={styles.rightPanel}>
