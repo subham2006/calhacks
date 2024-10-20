@@ -1,11 +1,5 @@
-import { SelectTool, exportToBlob, StateNode } from "tldraw";
+import { exportToBlob, StateNode } from "tldraw";
 import axios from "axios";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_OPEN_AI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
 
 class AITool extends StateNode {
   static id = "sticker";
@@ -20,7 +14,7 @@ class AITool extends StateNode {
 
   extractImage = async () => {
     const shapeIds = this.editor.getCurrentPageShapeIds();
-    if (shapeIds.size === 0) return alert("No shapes on the canvas");
+    if (shapeIds.size === 0) return alert("Nothing on the canvas");
 
     const blob = await exportToBlob({
       editor: this.editor,
@@ -36,24 +30,14 @@ class AITool extends StateNode {
     });
 
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "What’s in this image?" },
-              {
-                type: "image_url",
-                image_url: {
-                  url: base64Image,
-                },
-              },
-            ],
-          },
-        ],
-      });
-      console.log(response.choices[0].message.content);
+      const response = await axios.post(
+        "http://localhost:3000/analyze-whiteboard", // OpenAI API request is done on the server
+        {
+          base64Image: base64Image,
+        }
+      );
+
+      console.log(response.data.chatgpt_response);
     } catch (error) {
       console.log(error);
     }
