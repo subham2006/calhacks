@@ -130,25 +130,25 @@ function Home() {
               </div>
             )}
           </div>
+          {showModal && (
+            <div style={styles.modal}>
+              <h2>Select a Character</h2>
+              {characters.map((char) => (
+                <div
+                  key={char.name}
+                  style={styles.characterOption}
+                  onClick={() => selectCharacter(char)}
+                >
+                  <p>{char.name}</p>
+                </div>
+              ))}
+              <button onClick={closeModal} style={styles.closeModalButton}>
+                Close
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      {showModal && (
-        <div style={styles.modal}>
-          <h2>Select a Character</h2>
-          {characters.map((char) => (
-            <div
-              key={char.name}
-              style={styles.characterOption}
-              onClick={() => selectCharacter(char)}
-            >
-              <p>{char.name}</p>
-            </div>
-          ))}
-          <button onClick={closeModal} style={styles.closeModalButton}>
-            Close
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -187,6 +187,7 @@ const styles = {
     overflow: "hidden",
     backgroundPosition: "center",
     backgroundColor: "transparent", // Make background transparent to show the container background
+    position: "relative", // Add this to make it a positioning context for the modal
   },
   header: {
     fontSize: "28px",
@@ -265,7 +266,7 @@ const styles = {
     marginTop: "20px",
   },
   modal: {
-    position: "fixed",
+    position: "absolute",
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
@@ -273,6 +274,7 @@ const styles = {
     padding: "20px",
     borderRadius: "8px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    zIndex: 1000,
   },
   characterOption: {
     cursor: "pointer",
