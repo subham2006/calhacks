@@ -1,6 +1,11 @@
 import React, { useState, useRef } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
+import angBackground from "../assets/backgrounds/avatarBackground.jpg";
+import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
+import Whiteboard from "./Whiteboard";
+import "tldraw/tldraw.css";
+
 import Cartesia from "@cartesia/cartesia-js";
 
 // Replace with your Deepgram API key
@@ -12,8 +17,8 @@ const cartesia = new Cartesia({
 
 // Characters array
 const characters = [
-  { name: "Ang", src: ang },
-  { name: "Hiro", src: hiro },
+  { name: "Ang", src: ang, background: angBackground },
+  { name: "Hiro", src: hiro, background: hiroBackground },
 ];
 
 // Character Voices Map
@@ -205,56 +210,68 @@ function Home() {
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>Welcome to EduPal.ai</header>
-
-      <div style={styles.content}>
-        <button onClick={handleMicrophoneClick} style={styles.button}>
-          <div
-            style={{
-              ...styles.circle,
-              backgroundColor: isRecording ? "#ff4d4d" : "#f0f0f0",
-            }}
-          >
-            <img
-              src="https://img.icons8.com/ios-filled/50/microphone.png"
-              alt="Microphone Icon"
-            />
+    <div
+      style={{
+        ...styles.container,
+        backgroundImage: `url(${selectedCharacter.background})`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+      }}
+    >
+      <div style={styles.mainContent}>
+        <div style={styles.leftPanel}>
+          <div style={styles.whiteboardContainer}>
+            <Whiteboard />
           </div>
-        </button>
-        <div style={styles.text}>
-          {isRecording ? "Listening..." : "Click to Talk"}
         </div>
-
-        {transcript && (
-          <div style={styles.transcriptBox}>
-            <p style={styles.transcriptText}>{transcript}</p>
+        <div style={styles.rightPanel}>
+          <header style={styles.header}>Ask a Question!</header>
+          <div style={styles.characterContainer}>
+            <div style={styles.characterWrapper}>
+              <img
+                src={selectedCharacter.src}
+                alt={selectedCharacter.name}
+                style={styles.characterImage}
+              />
+            </div>
+            <button onClick={openModal} style={styles.changeCharacterButton}>
+              Change Character
+            </button>
           </div>
-        )}
+          <div style={styles.interactionArea}>
+            <button
+              onClick={handleMicrophoneClick}
+              style={styles.microphoneButton}
+            >
+              <div
+                style={{
+                  ...styles.microphoneCircle,
+                  backgroundColor: isRecording ? "#ff4d4d" : "#f0f0f0",
+                }}
+              >
+                <img
+                  src="https://img.icons8.com/ios-filled/50/microphone.png"
+                  alt="Microphone Icon"
+                  style={styles.microphoneIcon}
+                />
+              </div>
+            </button>
+            <div style={styles.microphoneText}>
+              {isRecording ? "Listening..." : "Click to Talk"}
+            </div>
+            {transcript && (
+              <div style={styles.transcriptBox}>
+                <p>{transcript}</p>
+              </div>
+            )}
+          </div>
 
-        <div style={styles.uploadContainer}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            style={styles.uploadButton}
-          />
-          {image && (
-            <img src={image} alt="Uploaded" style={styles.previewImage} />
+          {transcript && (
+            <div style={styles.transcriptBox}>
+              <p style={styles.transcriptText}>{transcript}</p>
+            </div>
           )}
-        </div>
-
-        <div style={styles.characterContainer}>
-          <div style={styles.characterWrapper}>
-            <img
-              src={selectedCharacter.src}
-              alt={selectedCharacter.name}
-              style={styles.characterImage}
-            />
-          </div>
-          <button onClick={openModal} style={styles.changeCharacterButton}>
-            Change Character
-          </button>
 
           {showModal && (
             <div style={styles.modal}>
@@ -274,20 +291,6 @@ function Home() {
             </div>
           )}
         </div>
-
-        <div>
-          <h3>Chat History:</h3>
-          <ul>
-            {chatHistory.map((entry, index) => (
-              <li key={index}>
-                <strong>{entry.role}:</strong> {entry.content}
-                <br />
-                Sentiment: {entry.sentiment} (Score:{" "}
-                {entry.sentimentScore.toFixed(2)})
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>
   );
@@ -297,106 +300,141 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    height: "100vh",
-    position: "relative", // Allows absolute positioning for character
+    height: "95vh",
+    width: "100vw", // Prevent scrolling
+  },
+  mainContent: {
+    display: "flex",
+    flex: 1,
+    overflow: "hidden",
+  },
+  leftPanel: {
+    flex: "0 0 60%", // Adjusted to fit the whole screen with rightPanel
+    display: "flex",
+    flexDirection: "column",
+    padding: "20px",
+    backgroundColor: "transparent", // Make background transparent to show the container background
+  },
+  whiteboardContainer: {
+    width: "100%",
+    height: "100%", // Adjusted to fill the panel
+    backgroundColor: "#ffffff",
+    borderRadius: "8px",
+    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+  },
+  rightPanel: {
+    flex: "0 0 40%", // Adjusted to fit the whole screen with leftPanel
+    display: "flex",
+    flexDirection: "column",
+    padding: "20px",
+    overflow: "hidden",
+    backgroundPosition: "center",
+    backgroundColor: "transparent", // Make background transparent to show the container background
+    position: "relative", // Add this to make it a positioning context for the modal
   },
   header: {
-    fontSize: "24px",
+    fontSize: "28px",
     fontWeight: "bold",
-    margin: "20px 0",
-    position: "absolute",
-    top: "20px",
     textAlign: "center",
-    width: "100%",
-  },
-  content: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
+    marginBottom: "20px",
   },
   characterContainer: {
-    position: "absolute",
-    right: "20px", // Push character to the right
-    top: "80px", // Start just below the header
-    bottom: "85px", // Align with the "Choose File" button
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "space-between",
-    textAlign: "center",
+    marginBottom: "20px",
   },
   characterWrapper: {
-    width: "250px", // Standardize width for all characters
-    height: "400px", // Standardize height for all characters
+    width: "400px",
+    height: "500px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden", // Ensure content stays within the box
-    backgroundColor: "#f5f5f5", // Optional background for consistency
-    borderRadius: "12px", // Optional rounded corners
+    overflow: "hidden",
+    borderRadius: "12px",
+    marginBottom: "20px",
   },
   characterImage: {
-    width: "100%", // Ensure it fills the width of the container
-    height: "100%", // Ensure it fills the height of the container
-    objectFit: "contain", // Preserve aspect ratio without distortion
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
   },
   changeCharacterButton: {
-    marginTop: "10px",
-    padding: "10px 20px",
-    fontSize: "16px",
+    padding: "12px 24px",
+    fontSize: "18px",
     cursor: "pointer",
     border: "none",
     borderRadius: "8px",
-    backgroundColor: "grey",
+    backgroundColor: "#007bff",
     color: "white",
   },
-  button: {
+  interactionArea: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: "20px",
+  },
+  microphoneButton: {
     border: "none",
     backgroundColor: "transparent",
     cursor: "pointer",
     marginBottom: "10px",
-    padding: 0,
-    color: "grey",
   },
-  circle: {
-    width: "100px",
-    height: "100px",
+  microphoneCircle: {
+    width: "80px",
+    height: "80px",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     transition: "background-color 0.3s ease",
   },
-  text: {
+  microphoneIcon: {
+    width: "40px",
+    height: "40px",
+  },
+  microphoneText: {
     fontSize: "18px",
     marginTop: "10px",
+    textAlign: "center",
   },
   transcriptBox: {
-    marginTop: "20px",
-    width: "80%",
-    maxWidth: "500px",
-    backgroundColor: "#ffffff",
+    width: "100%",
+    maxWidth: "400px",
+    backgroundColor: "#f8f9fa",
     borderRadius: "12px",
     padding: "15px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
     textAlign: "center",
+    marginTop: "20px",
   },
-  uploadContainer: {
-    marginTop: "30px",
-    textAlign: "center",
+  modal: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    backgroundColor: "white",
+    padding: "20px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    zIndex: 1000,
   },
-  uploadButton: {
-    marginBottom: "15px",
+  characterOption: {
     cursor: "pointer",
+    padding: "10px",
+    margin: "5px 0",
+    borderRadius: "4px",
+    transition: "background-color 0.3s ease",
   },
-  previewImage: {
-    maxWidth: "300px",
-    maxHeight: "300px",
-    objectFit: "contain",
+  closeModalButton: {
     marginTop: "10px",
+    padding: "5px 10px",
+    fontSize: "14px",
+    cursor: "pointer",
+    border: "none",
+    borderRadius: "4px",
+    backgroundColor: "#f0f0f0",
+    color: "black",
   },
 };
 

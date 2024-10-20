@@ -5,6 +5,7 @@ import Home from './components/Home';
 import About from './components/About';
 import Interact from './components/Interact'; // Drawing component
 import QRCodeInteraction from './components/QRCodeInteraction'; // QR code component
+import Whiteboard from './components/Whiteboard';
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/whiteboard" element={<Whiteboard />} />
           <Route
             path="/connect"
             element={
