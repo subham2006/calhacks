@@ -1,19 +1,20 @@
 import React, { useState, useRef } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
+import angBackground from "../assets/backgrounds/avatarBackground.jpg";
+import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
 import Whiteboard from "./Whiteboard";
-import 'tldraw/tldraw.css';
+import "tldraw/tldraw.css";
 
 const characters = [
-  { name: "Ang", src: ang },
-  { name: "Hiro", src: hiro },
+  { name: "Ang", src: ang, background: angBackground },
+  { name: "Hiro", src: hiro, background: hiroBackground },
 ];
 
 function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [image, setImage] = useState(null);
-  const [selectedCharacter, setSelectedCharacter] = useState(characters[0]);
+  const [selectedCharacter, setSelectedCharacter] = useState(characters[1]);
   const [showModal, setShowModal] = useState(false);
 
   const recognitionRef = useRef(null);
@@ -64,15 +65,6 @@ function Home() {
     isRecording ? stopRecognition() : startRecognition();
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
 
@@ -82,7 +74,15 @@ function Home() {
   };
 
   return (
-    <div style={styles.container}>
+    <div
+      style={{
+        ...styles.container,
+        backgroundImage: `url(${selectedCharacter.background})`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+      }}
+    >
       <div style={styles.mainContent}>
         <div style={styles.leftPanel}>
           <div style={styles.whiteboardContainer}>
@@ -104,7 +104,10 @@ function Home() {
             </button>
           </div>
           <div style={styles.interactionArea}>
-            <button onClick={handleMicrophoneClick} style={styles.microphoneButton}>
+            <button
+              onClick={handleMicrophoneClick}
+              style={styles.microphoneButton}
+            >
               <div
                 style={{
                   ...styles.microphoneCircle,
@@ -125,17 +128,6 @@ function Home() {
               <div style={styles.transcriptBox}>
                 <p>{transcript}</p>
               </div>
-            )}
-          </div>
-          <div style={styles.uploadContainer}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={styles.uploadButton}
-            />
-            {image && (
-              <img src={image} alt="Uploaded" style={styles.previewImage} />
             )}
           </div>
         </div>
@@ -165,8 +157,8 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column",
-    height: "100vh",
-    width: "100vw",
+    height: "95vh",
+    width: "100vw", // Prevent scrolling
   },
   mainContent: {
     display: "flex",
@@ -174,30 +166,30 @@ const styles = {
     overflow: "hidden",
   },
   leftPanel: {
-    flex: "0 0 60%",
+    flex: "0 0 60%", // Adjusted to fit the whole screen with rightPanel
     display: "flex",
     flexDirection: "column",
     padding: "20px",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "transparent", // Make background transparent to show the container background
   },
   whiteboardContainer: {
     width: "100%",
-    height: "95%",
+    height: "100%", // Adjusted to fill the panel
     backgroundColor: "#ffffff",
     borderRadius: "8px",
     boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-    overflow: "hidden",
   },
   rightPanel: {
-    flex: "0 0 50%",
+    flex: "0 0 40%", // Adjusted to fit the whole screen with leftPanel
     display: "flex",
     flexDirection: "column",
     padding: "20px",
-    overflowY: "auto",
-    backgroundColor: "#ffffff",
+    overflow: "hidden",
+    backgroundPosition: "center",
+    backgroundColor: "transparent", // Make background transparent to show the container background
   },
   header: {
-    fontSize: "24px",
+    fontSize: "28px",
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: "20px",
@@ -209,15 +201,14 @@ const styles = {
     marginBottom: "20px",
   },
   characterWrapper: {
-    width: "150px",
-    height: "225px",
+    width: "400px",
+    height: "500px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    backgroundColor: "#f5f5f5",
     borderRadius: "12px",
-    marginBottom: "10px",
+    marginBottom: "20px",
   },
   characterImage: {
     width: "100%",
@@ -225,8 +216,8 @@ const styles = {
     objectFit: "contain",
   },
   changeCharacterButton: {
-    padding: "10px 20px",
-    fontSize: "16px",
+    padding: "12px 24px",
+    fontSize: "18px",
     cursor: "pointer",
     border: "none",
     borderRadius: "8px",
@@ -272,20 +263,6 @@ const styles = {
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
     textAlign: "center",
     marginTop: "20px",
-  },
-  uploadContainer: {
-    marginTop: "20px",
-    textAlign: "center",
-  },
-  uploadButton: {
-    marginBottom: "15px",
-    cursor: "pointer",
-  },
-  previewImage: {
-    maxWidth: "100%",
-    maxHeight: "200px",
-    objectFit: "contain",
-    marginTop: "10px",
   },
   modal: {
     position: "fixed",
