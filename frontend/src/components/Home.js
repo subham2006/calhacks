@@ -24,10 +24,11 @@ const characterVoices = {
 
 function Home() {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState("");
   const [collectedTranscript, setCollectedTranscript] = useState(""); // Store segments here
   const [sentiment, setSentiment] = useState("neutral"); // Store sentiment
   const [sentimentScore, setSentimentScore] = useState(0); // Store sentiment score
+  const [averageSentimentScore, setAverageSentimentScore] = useState(0); // Store average sentiment score
+  const [sentimentData, setSentimentData] = useState([]); // Store sentiment data over time
   const [image, setImage] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(characters[0]);
   const [showModal, setShowModal] = useState(false);
@@ -60,16 +61,22 @@ function Home() {
       try {
         const data = JSON.parse(message.data);
 
+        console.log("Received data:", data); // Debugging
+
         const newSegment = data.channel?.alternatives?.[0]?.transcript || "";
-        const newSentiment = data.sentiments?.average?.sentiment || "neutral";
+        const newSentiment =
+          data.channel?.alternatives?.[0]?.sentiment?.overall || "neutral";
         const newSentimentScore =
-          data.sentiments?.average?.sentiment_score || 0;
+          data.channel?.alternatives?.[0]?.sentiment?.score || 0;
 
         console.log(`Transcript Segment: ${newSegment}`);
         console.log(`Sentiment: ${newSentiment} (Score: ${newSentimentScore})`);
 
         // Accumulate transcript segments
         setCollectedTranscript((prev) => prev + " " + newSegment);
+
+        // Save sentiment data
+        setSentimentData((prev) => [...prev, newSentimentScore]);
 
         // Save the latest sentiment values
         setSentiment(newSentiment);
@@ -83,6 +90,55 @@ function Home() {
     socket.onerror = (error) => console.error("WebSocket error:", error);
 
     setIsRecording(true);
+  };
+
+  const calculateAverageSentimentScore = () => {
+    if (sentimentData.length > 0) {
+      const totalScore = sentimentData.reduce((acc, score) => acc + score, 0);
+      const averageScore = totalScore / sentimentData.length;
+      setAverageSentimentScore(averageScore);
+
+      let overallSentiment = "neutral";
+      if (averageScore > 0.2) {
+        overallSentiment = "positive";
+      } else if (averageScore < -0.2) {
+        overallSentiment = "negative";
+      }
+      setSentiment(overallSentiment);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
+    }
+
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+
+    // Calculate the average sentiment score
+    calculateAverageSentimentScore();
+
+    // Add the collected transcript and sentiment to chat history
+    if (collectedTranscript.trim()) {
+      addToChatHistory(
+        "user",
+        collectedTranscript.trim(),
+        sentiment,
+        averageSentimentScore
+      );
+    }
+
+    // Reset collected transcript and sentiment data
+    setCollectedTranscript("");
+    setSentimentData([]);
+    setIsRecording(false);
+
+    playTTS("I am strong", selectedCharacter);
   };
 
   const playTTS = async (text, character) => {
@@ -106,7 +162,7 @@ function Home() {
           mode: "id",
           id: voiceId, // Use the voice ID from the character's map
         },
-        transcript: text || "Hello, world!", // Default message if text is empty
+        transcript: text || "I am strong", // Default message if text is empty
       });
 
       // Extract the audio source from the response
@@ -143,35 +199,6 @@ function Home() {
     } catch (error) {
       console.error("Error playing TTS:", error);
     }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
-    }
-
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-
-    // Add the collected transcript and sentiment to chat history
-    if (collectedTranscript.trim()) {
-      addToChatHistory(
-        "user",
-        collectedTranscript.trim(),
-        sentiment,
-        sentimentScore
-      );
-    }
-
-    // Reset collected transcript
-    setCollectedTranscript("");
-    setIsRecording(false);
-
-    playTTS("helloworld", selectedCharacter);
   };
 
   const addToChatHistory = (role, content, sentiment, sentimentScore) => {
@@ -226,9 +253,9 @@ function Home() {
           {isRecording ? "Listening..." : "Click to Talk"}
         </div>
 
-        {transcript && (
+        {collectedTranscript && (
           <div style={styles.transcriptBox}>
-            <p style={styles.transcriptText}>{transcript}</p>
+            <p style={styles.transcriptText}>{collectedTranscript}</p>
           </div>
         )}
 
