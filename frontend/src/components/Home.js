@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
+import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
 
 // Replace with your Deepgram API key
@@ -14,12 +15,14 @@ const cartesia = new Cartesia({
 const characters = [
   { name: "Ang", src: ang },
   { name: "Hiro", src: hiro },
+  { name: "Jasmine", src: jasmine },
 ];
 
 // Character Voices Map
 const characterVoices = {
-  Ang: "37172f13-c9fe-47f1-aef0-3bd60836a5bf", // Example voice ID for Ang
-  Hiro: "211be958-0aea-490f-8a13-4ada04de9353", // Example voice ID for Hiro
+  Ang: "37172f13-c9fe-47f1-aef0-3bd60836a5bf",
+  Hiro: "211be958-0aea-490f-8a13-4ada04de9353",
+  Jasmine: "6377eebe-ae73-44e0-854a-229fba6e76c8",
 };
 
 function Home() {
