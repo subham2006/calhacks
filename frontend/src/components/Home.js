@@ -53,6 +53,8 @@ function Home() {
   const [showModal, setShowModal] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
 
+  const persistentTranscript = useRef([]); // Store the transcript across renders
+
   const [editor, setEditor] = useState(null);
   const [airesponse, setAiResponse] = useState(null);
   const handleSetEditor = (editorVal) => {
@@ -211,6 +213,8 @@ function Home() {
       socketRef.current.close();
     }
 
+    var characterResponse = "";
+
     // Immediately stop the recording indicator
     setIsRecording(false);
 
@@ -234,13 +238,18 @@ function Home() {
     };
 
     const base64Image = await handleExtractImage();
-    console.log("BASE64 IMAGE", base64Image);
+
+    console.log("TRANSCRIPT:", collectedTranscript.trim());
+
+    persistentTranscript.current.push(collectedTranscript.trim());
 
     try {
-      const response = await axios.post("http://localhost:3001/analyze-whiteboard", {
-        transcript: collectedTranscript.trim(),
-        base64Image: base64Image,
-      });
+      const response = await axios.post("http://localhost:3001/analyze-whiteboard",
+        {
+          transcript: persistentTranscript.current,
+          base64Image: base64Image,
+        })
+      characterResponse = response.data.chatgpt_response;
       console.log("HERE IS THE RESPONSE", response.data);
       setAiResponse(response.data.chatgpt_response);
     } catch (error) {
@@ -259,9 +268,12 @@ function Home() {
 
     // Reset collected transcript
     setCollectedTranscript("");
+    setIsRecording(false);
 
-    // Play TTS after stopping recording
-    playTTS(airesponse, selectedCharacter);
+    playTTS(
+      characterResponse,
+      selectedCharacter
+    );
   };
 
   const addToChatHistory = (role, content, sentiment, sentimentScore) => {
