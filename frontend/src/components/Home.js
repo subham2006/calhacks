@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
-import Whiteboard from "./Whiteboard"
-import { exportToBlob, Tldraw, TLUiComponents, useEditor } from 'tldraw'
+import Whiteboard from "./Whiteboard";
 import 'tldraw/tldraw.css';
 
 const characters = [
@@ -86,12 +85,24 @@ function Home() {
     <div style={styles.container}>
       <div style={styles.mainContent}>
         <div style={styles.leftPanel}>
-          <div style={styles.whiteboard}>
+          <div style={styles.whiteboardContainer}>
             <Whiteboard />
           </div>
         </div>
         <div style={styles.rightPanel}>
-          <header style={styles.header}>Welcome to EduPal.ai</header>
+          <header style={styles.header}>Ask a Question!</header>
+          <div style={styles.characterContainer}>
+            <div style={styles.characterWrapper}>
+              <img
+                src={selectedCharacter.src}
+                alt={selectedCharacter.name}
+                style={styles.characterImage}
+              />
+            </div>
+            <button onClick={openModal} style={styles.changeCharacterButton}>
+              Change Character
+            </button>
+          </div>
           <div style={styles.interactionArea}>
             <button onClick={handleMicrophoneClick} style={styles.microphoneButton}>
               <div
@@ -110,60 +121,42 @@ function Home() {
             <div style={styles.microphoneText}>
               {isRecording ? "Listening..." : "Click to Talk"}
             </div>
-
             {transcript && (
               <div style={styles.transcriptBox}>
                 <p>{transcript}</p>
               </div>
             )}
-
-            <div style={styles.uploadContainer}>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={styles.uploadButton}
-              />
-              {image && (
-                <img src={image} alt="Uploaded" style={styles.previewImage} />
-              )}
-            </div>
           </div>
-
-          <div style={styles.characterContainer}>
-            <div style={styles.characterWrapper}>
-              <img
-                src={selectedCharacter.src}
-                alt={selectedCharacter.name}
-                style={styles.characterImage}
-              />
-            </div>
-            <div>
-              <button onClick={openModal} style={styles.changeCharacterButton}>
-                Change Character
-              </button>
-            </div>
-
-            {showModal && (
-              <div style={styles.modal}>
-                <h2>Select a Character</h2>
-                {characters.map((char) => (
-                  <div
-                    key={char.name}
-                    style={styles.characterOption}
-                    onClick={() => selectCharacter(char)}
-                  >
-                    <p>{char.name}</p>
-                  </div>
-                ))}
-                <button onClick={closeModal} style={styles.closeModalButton}>
-                  Close
-                </button>
-              </div>
+          <div style={styles.uploadContainer}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={styles.uploadButton}
+            />
+            {image && (
+              <img src={image} alt="Uploaded" style={styles.previewImage} />
             )}
           </div>
         </div>
       </div>
+      {showModal && (
+        <div style={styles.modal}>
+          <h2>Select a Character</h2>
+          {characters.map((char) => (
+            <div
+              key={char.name}
+              style={styles.characterOption}
+              onClick={() => selectCharacter(char)}
+            >
+              <p>{char.name}</p>
+            </div>
+          ))}
+          <button onClick={closeModal} style={styles.closeModalButton}>
+            Close
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -172,7 +165,7 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column",
-    height: "calc(100vh - 50px)", // Adjust this value based on your navbar height
+    height: "100vh",
     width: "100vw",
   },
   mainContent: {
@@ -183,12 +176,12 @@ const styles = {
   leftPanel: {
     flex: "0 0 60%",
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "column",
+    padding: "20px",
     backgroundColor: "#f0f0f0",
   },
-  whiteboard: {
-    width: "95%",
+  whiteboardContainer: {
+    width: "100%",
     height: "95%",
     backgroundColor: "#ffffff",
     borderRadius: "8px",
@@ -196,7 +189,7 @@ const styles = {
     overflow: "hidden",
   },
   rightPanel: {
-    flex: "0 0 40%",
+    flex: "0 0 50%",
     display: "flex",
     flexDirection: "column",
     padding: "20px",
@@ -209,10 +202,42 @@ const styles = {
     textAlign: "center",
     marginBottom: "20px",
   },
+  characterContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: "20px",
+  },
+  characterWrapper: {
+    width: "150px",
+    height: "225px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    backgroundColor: "#f5f5f5",
+    borderRadius: "12px",
+    marginBottom: "10px",
+  },
+  characterImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+  },
+  changeCharacterButton: {
+    padding: "10px 20px",
+    fontSize: "16px",
+    cursor: "pointer",
+    border: "none",
+    borderRadius: "8px",
+    backgroundColor: "#007bff",
+    color: "white",
+  },
   interactionArea: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    marginBottom: "20px",
   },
   microphoneButton: {
     border: "none",
@@ -249,7 +274,7 @@ const styles = {
     marginTop: "20px",
   },
   uploadContainer: {
-    marginTop: "30px",
+    marginTop: "20px",
     textAlign: "center",
   },
   uploadButton: {
@@ -261,37 +286,6 @@ const styles = {
     maxHeight: "200px",
     objectFit: "contain",
     marginTop: "10px",
-  },
-  characterContainer: {
-    marginTop: "30px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  characterWrapper: {
-    width: "200px",
-    height: "300px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    backgroundColor: "#f5f5f5",
-    borderRadius: "12px",
-  },
-  characterImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-  },
-  changeCharacterButton: {
-    marginTop: "10px",
-    padding: "10px 20px",
-    fontSize: "16px",
-    cursor: "pointer",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#007bff",
-    color: "white",
   },
   modal: {
     position: "fixed",
