@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import ang from "../assets/characters/ang.png";
+import React, { useState, useRef, useEffect } from "react";
+import aang from "../assets/characters/aang2.png";
 import hiro from "../assets/characters/hiro.png";
 import angBackground from "../assets/backgrounds/avatarBackground.jpg";
 import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
@@ -9,6 +9,7 @@ import "tldraw/tldraw.css";
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
+import "./SpeechBubble.css";
 
 // Replace with your Deepgram API key
 const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
@@ -19,14 +20,14 @@ const cartesia = new Cartesia({
 
 // Characters array
 const characters = [
-  { name: "Ang", src: ang, background: angBackground },
+  { name: "Aang", src: aang, background: angBackground },
   { name: "Hiro", src: hiro, background: hiroBackground },
-  { name: "Jasmine", src: jasmine, background: jasmineBackground }
+  { name: "Jasmine", src: jasmine, background: jasmineBackground },
 ];
 
 // Character Voices Map
 const characterVoices = {
-  Ang: "37172f13-c9fe-47f1-aef0-3bd60836a5bf",
+  Aang: "37172f13-c9fe-47f1-aef0-3bd60836a5bf",
   Hiro: "211be958-0aea-490f-8a13-4ada04de9353",
   Jasmine: "6377eebe-ae73-44e0-854a-229fba6e76c8",
 };
@@ -38,9 +39,11 @@ function Home() {
   const [sentiment, setSentiment] = useState("neutral"); // Store sentiment
   const [sentimentScore, setSentimentScore] = useState(0); // Store sentiment score
   const [image, setImage] = useState(null);
-  const [selectedCharacter, setSelectedCharacter] = useState(characters[0]);
+  const [selectedCharacter, setSelectedCharacter] = useState(characters[1]);
   const [showModal, setShowModal] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechBubbleText, setSpeechBubbleText] = useState("");
 
   const mediaRecorderRef = useRef(null);
   const socketRef = useRef(null); // Store WebSocket reference
@@ -97,6 +100,9 @@ function Home() {
   };
 
   const playTTS = async (text, character, speed, emotion) => {
+    setIsSpeaking(true);
+    setSpeechBubbleText(text);
+
     const voiceId = characterVoices[character.name] || "default-voice-id"; // Fallback voice
 
     try {
@@ -151,10 +157,18 @@ function Home() {
       // Play the audio
       sourceNode.start();
 
+      // Set up an event listener for when the audio finishes playing
+      sourceNode.onended = () => {
+        setIsSpeaking(false);
+        setSpeechBubbleText("");
+      };
+
       // Disconnect WebSocket after use
       websocket.disconnect();
     } catch (error) {
       console.error("Error playing TTS:", error);
+      setIsSpeaking(false);
+      setSpeechBubbleText("");
     }
   };
 
@@ -185,7 +199,7 @@ function Home() {
     setIsRecording(false);
 
     playTTS(
-      "that's really interesting, can you tell me more?",
+      "that's really interesting, can you tell me more? I really need you tell me a lot more so that this sentence takes up way more space, thanks so much for telling me such an interesting thing thats really really awesome",
       selectedCharacter
     );
   };
@@ -274,7 +288,7 @@ function Home() {
                 </div>
               </button>
               <div style={styles.microphoneText}>
-                {isRecording ? "Listening..." : "Click to Talk"}
+                {isRecording && "Listening..."}
               </div>
               {transcript && (
                 <div style={styles.transcriptBox}>
@@ -307,6 +321,11 @@ function Home() {
               </div>
             )}
           </div>
+        </div>
+      )}
+      {isSpeaking && (
+        <div className="speech-bubble" style={styles.speechBubblePosition}>
+          <p style={styles.speechBubbleText}>{speechBubbleText}</p>
         </div>
       )}
     </div>
@@ -354,12 +373,16 @@ const styles = {
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: "20px",
+    // backgroundColor: "lightgrey",
+    // borderRadius: "8px",
+    width: "50%",
+    alignSelf: "center",
   },
   characterContainer: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    marginBottom: "20px",
+    marginBottom: "10px",
   },
   characterWrapper: {
     width: "400px",
@@ -370,6 +393,7 @@ const styles = {
     overflow: "hidden",
     borderRadius: "12px",
     marginBottom: "20px",
+    position: "relative",
   },
   characterImage: {
     width: "100%",
@@ -377,7 +401,7 @@ const styles = {
     objectFit: "contain",
   },
   changeCharacterButton: {
-    padding: "12px 24px",
+    padding: "12px 12px",
     fontSize: "18px",
     cursor: "pointer",
     border: "none",
@@ -398,8 +422,8 @@ const styles = {
     marginBottom: "10px",
   },
   microphoneCircle: {
-    width: "80px",
-    height: "80px",
+    width: "100px",
+    height: "100px",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -414,6 +438,9 @@ const styles = {
     fontSize: "18px",
     marginTop: "10px",
     textAlign: "center",
+    // backgroundColor: "lightgrey",
+    // borderRadius: "8px",
+    padding: "8px",
   },
   transcriptBox: {
     width: "100%",
@@ -452,6 +479,17 @@ const styles = {
     borderRadius: "4px",
     backgroundColor: "#f0f0f0",
     color: "black",
+  },
+  speechBubblePosition: {
+    position: "fixed",
+    top: "20%",
+    left: "70%", // Changed from 50% to 70% to shift right
+    transform: "translateX(-50%)",
+    zIndex: 1000,
+  },
+  speechBubbleText: {
+    margin: 0,
+    fontSize: "14px",
   },
 };
 
