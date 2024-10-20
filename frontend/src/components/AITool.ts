@@ -31,7 +31,7 @@ class AITool extends StateNode {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/analyze-whiteboard", // OpenAI API request is done on the server
+        "http://localhost:3001/analyze-whiteboard", // OpenAI API request is done on the server
         {
           base64Image: base64Image,
         }
