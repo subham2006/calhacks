@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
-import { Tldraw } from 'tldraw';
+import Whiteboard from "./Whiteboard"
+import { exportToBlob, Tldraw, TLUiComponents, useEditor } from 'tldraw'
 import 'tldraw/tldraw.css';
 
 const characters = [
@@ -86,7 +87,7 @@ function Home() {
       <div style={styles.mainContent}>
         <div style={styles.leftPanel}>
           <div style={styles.whiteboard}>
-            <Tldraw />
+            <Whiteboard />
           </div>
         </div>
         <div style={styles.rightPanel}>
