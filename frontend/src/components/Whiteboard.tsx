@@ -1,6 +1,8 @@
-import React from "react";
+// Whiteboard.tsx
+import React, { useContext, useMemo } from "react";
 import "tldraw/tldraw.css";
 import AITool from "./AITool.ts";
+import { AIContext } from './AIContext';
 import {
   DefaultKeyboardShortcutsDialog,
   DefaultKeyboardShortcutsDialogContent,
@@ -13,12 +15,12 @@ import {
   TldrawUiMenuItem,
   useIsToolSelected,
   useTools,
+  TLStateNodeConstructor,
 } from "tldraw";
-import { useSyncDemo } from '@tldraw/sync'; // Import the sync hook
+import { useSyncDemo } from '@tldraw/sync';
 
 const uiOverrides: TLUiOverrides = {
   tools(editor, tools) {
-    // Create a tool item in the ui's context.
     tools.sticker = {
       id: "sticker",
       icon: "heart-icon",
@@ -51,7 +53,6 @@ const components: TLComponents = {
     return (
       <DefaultKeyboardShortcutsDialog {...props}>
         <DefaultKeyboardShortcutsDialogContent />
-        {/* Ideally, we'd interleave this into the tools group */}
         <TldrawUiMenuItem {...tools["sticker"]} />
       </DefaultKeyboardShortcutsDialog>
     );
@@ -64,9 +65,18 @@ export const customAssetUrls: TLUiAssetUrlOverrides = {
   },
 };
 
-const customTools = [AITool];
 const Whiteboard = ({ updateEditor }) => {
-  const store = useSyncDemo({ roomId: 'my-unique-room-id' }); // Initialize the sync store
+  const { setAIResponse } = useContext(AIContext);
+  const store = useSyncDemo({ roomId: 'my-unique-room-id' });
+
+  const customTools = useMemo(() => {
+    const ExtendedAITool = class extends AITool {
+      constructor(editor: any) {
+        super(editor, setAIResponse);
+      }
+    } as unknown as TLStateNodeConstructor;
+    return [ExtendedAITool];
+  }, [setAIResponse]);
 
   return (
     <div
@@ -88,8 +98,7 @@ const Whiteboard = ({ updateEditor }) => {
         overrides={uiOverrides}
         components={components}
         assetUrls={customAssetUrls}
-        store={store} // Pass the store to Tldraw for collaboration
-        style={{ width: "100%", height: "100%" }} // Ensure Tldraw takes full width and height
+        store={store}
       />
     </div>
   );

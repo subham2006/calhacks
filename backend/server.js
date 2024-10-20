@@ -29,7 +29,7 @@ app.post('/analyze-whiteboard', async (req, res) => {
             {
                 role: "user",
                 content: [
-                { type: "text", text: "What’s in this image? If you see an equation, please solve it." },
+                { type: "text", text: "Give me a short 2 sentence summary of the whiteboard. If you see an equation, please solve it. I want you to explain this as if it were a child, please be considerate of the child's level of understanding. remember do not go more than 2 setnences, and if you are talkign about equations do it in latex format." },
                 {
                     type: "image_url",
                     image_url: {

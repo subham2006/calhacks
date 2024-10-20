@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import aang from "../assets/characters/aang2.png";
 import hiro from "../assets/characters/hiro.png";
 import angBackground from "../assets/backgrounds/avatarBackground.jpg";
@@ -8,12 +8,16 @@ import Whiteboard from "./Whiteboard.tsx";
 import { exportToBlob } from "tldraw";
 import "tldraw/tldraw.css";
 import axios from "axios";
+import { AIContext } from './AIContext';
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
 
 import AITool from "./AITool.ts";
 import "./SpeechBubble.css";
+import { ScaleLoader } from "react-spinners"; // Import spinner
 
 // Replace with your Deepgram API key
 const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
@@ -36,7 +40,9 @@ const characterVoices = {
   Jasmine: "6377eebe-ae73-44e0-854a-229fba6e76c8",
 };
 
+
 function Home() {
+  const { aiResponse } = useContext(AIContext);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [collectedTranscript, setCollectedTranscript] = useState(""); // Store segments here
@@ -48,7 +54,7 @@ function Home() {
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
 
   const [editor, setEditor] = useState(null);
-
+  const [airesponse, setAiResponse] = useState(null);
   const handleSetEditor = (editorVal) => {
     setEditor(editorVal);
   }
@@ -59,6 +65,12 @@ function Home() {
   const socketRef = useRef(null); // Store WebSocket reference
 
   const isIpad = /iPad/i.test(navigator.userAgent); // Detect if the device is an iPad
+
+  const renderMathExpression = (text) => {
+    return <Latex>{text}</Latex>;
+  };
+
+  const [isSpinnerVisible, setIsSpinnerVisible] = useState(false);
 
   const startDeepgramStream = async () => {
     const socket = new WebSocket(
@@ -110,7 +122,7 @@ function Home() {
   };
 
   const playTTS = async (text, character, speed, emotion) => {
-    setIsSpeaking(true);
+    setIsSpinnerVisible(true); // Start spinner when TTS is initiated
     setSpeechBubbleText(text);
 
     const voiceId = characterVoices[character.name] || "default-voice-id"; // Fallback voice
@@ -135,7 +147,7 @@ function Home() {
           mode: "id",
           id: voiceId, // Use the voice ID from the character's map
         },
-        transcript: text || "that's really interesting can you tell me more?", // Default message if text is empty
+        transcript: text, // Default message if text is empty
       });
 
       // Extract the audio source from the response
@@ -167,18 +179,23 @@ function Home() {
       // Play the audio
       sourceNode.start();
 
+      // Hide spinner and show speech bubble when audio starts playing
+      setIsSpinnerVisible(false);
+      setIsSpeaking(true);
+
       // Set up an event listener for when the audio finishes playing
       sourceNode.onended = () => {
-        setIsSpeaking(false);
         setSpeechBubbleText("");
+        setIsSpeaking(false); // Hide speech bubble when audio ends
       };
 
       // Disconnect WebSocket after use
       websocket.disconnect();
     } catch (error) {
       console.error("Error playing TTS:", error);
-      setIsSpeaking(false);
+      setIsSpinnerVisible(false);
       setSpeechBubbleText("");
+      setIsSpeaking(false); // Ensure speech bubble is hidden on error
     }
   };
 
@@ -193,6 +210,9 @@ function Home() {
     if (socketRef.current) {
       socketRef.current.close();
     }
+
+    // Immediately stop the recording indicator
+    setIsRecording(false);
 
     const handleExtractImage = async () => {
       const shapeIds = editor.getCurrentPageShapeIds();
@@ -211,18 +231,18 @@ function Home() {
       });
 
       return base64Image;
-    }
+    };
 
     const base64Image = await handleExtractImage();
     console.log("BASE64 IMAGE", base64Image);
 
     try {
-      const response = await axios.post("http://localhost:3001/analyze-whiteboard",
-        {
-          transcript: collectedTranscript.trim(),
-          base64Image: base64Image,
-        })
+      const response = await axios.post("http://localhost:3001/analyze-whiteboard", {
+        transcript: collectedTranscript.trim(),
+        base64Image: base64Image,
+      });
       console.log("HERE IS THE RESPONSE", response.data);
+      setAiResponse(response.data.chatgpt_response);
     } catch (error) {
       console.log(error);
     }
@@ -239,12 +259,9 @@ function Home() {
 
     // Reset collected transcript
     setCollectedTranscript("");
-    setIsRecording(false);
 
-    playTTS(
-      "that's really interesting, can you tell me more? I really need you tell me a lot more so that this sentence takes up way more space, thanks so much for telling me such an interesting thing thats really really awesome",
-      selectedCharacter
-    );
+    // Play TTS after stopping recording
+    playTTS(airesponse, selectedCharacter);
   };
 
   const addToChatHistory = (role, content, sentiment, sentimentScore) => {
@@ -257,7 +274,11 @@ function Home() {
   };
 
   const handleMicrophoneClick = () => {
-    isRecording ? stopRecording() : startDeepgramStream();
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startDeepgramStream();
+    }
   };
 
   const handleImageUpload = (event) => {
@@ -363,12 +384,22 @@ function Home() {
                 </button>
               </div>
             )}
+            {/* <div style={styles.modal}>
+            {airespohwllo, qnse ? renderMathExpression(airesponse) : "AI output will appear here."}
+            </div> */}
           </div>
+        </div>
+      )}
+      {isSpinnerVisible && (
+        <div className="spinner-overlay" style={styles.spinnerOverlay}>
+          <ScaleLoader color="#000000" loading={isSpinnerVisible} size={50} />
         </div>
       )}
       {isSpeaking && (
         <div className="speech-bubble" style={styles.speechBubblePosition}>
-          <p style={styles.speechBubbleText}>{speechBubbleText}</p>
+          <p style={styles.speechBubbleText}>
+            {airesponse ? renderMathExpression(airesponse) : "AI output will appear here."}
+          </p>
         </div>
       )}
     </div>
@@ -533,6 +564,18 @@ const styles = {
   speechBubbleText: {
     margin: 0,
     fontSize: "14px",
+  },
+  spinnerOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    backgroundColor: "rgba(255, 255, 255, 0.8)", // Semi-transparent background
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 999, // Ensure it is below the speech bubble
   },
 };
 
