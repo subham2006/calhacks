@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
 import angBackground from "../assets/backgrounds/avatarBackground.jpg";
@@ -6,6 +6,7 @@ import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
 import jasmineBackground from "../assets/backgrounds/aladdinBackground.jpg";
 import Whiteboard from "./Whiteboard.tsx";
 import "tldraw/tldraw.css";
+import { AIContext } from './AIContext';
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
@@ -31,7 +32,9 @@ const characterVoices = {
   Jasmine: "6377eebe-ae73-44e0-854a-229fba6e76c8",
 };
 
+
 function Home() {
+  const { aiResponse } = useContext(AIContext);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [collectedTranscript, setCollectedTranscript] = useState(""); // Store segments here
@@ -307,16 +310,9 @@ function Home() {
               </div>
             )}
             <div style={styles.modal}>
-              <h3>Hello. This is the output of the AI</h3>
-
-
-
-
-
-
-            
-
-            </div>
+            <h3>AI Analysis Output</h3>
+            <p>{aiResponse || "AI output will appear here."}</p>
+          </div>
           </div>
         </div>
       )}

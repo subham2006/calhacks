@@ -1,8 +1,14 @@
-import { exportToBlob, StateNode } from "tldraw";
+import { exportToBlob, StateNode } from "@tldraw/tldraw";
 import axios from "axios";
 
 class AITool extends StateNode {
   static id = "sticker";
+  private setAIResponse: (response: string) => void;
+
+  constructor(editor: any, setAIResponse: (response: string) => void) {
+    super(editor);
+    this.setAIResponse = setAIResponse;
+  }
 
   override onEnter() {
     this.editor.setCursor({ type: "cross", rotation: 0 });
@@ -31,15 +37,16 @@ class AITool extends StateNode {
 
     try {
       const response = await axios.post(
-        "http://localhost:3001/analyze-whiteboard", // OpenAI API request is done on the server
+        "http://localhost:3001/analyze-whiteboard",
         {
           base64Image: base64Image,
         }
       );
 
-      console.log(response.data.chatgpt_response);
+      this.setAIResponse(response.data.chatgpt_response);
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      this.setAIResponse("Error processing the image.");
     }
   };
 }
