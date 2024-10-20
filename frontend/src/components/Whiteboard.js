@@ -1,36 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { exportToBlob, Tldraw, useEditor } from 'tldraw';
 import 'tldraw/tldraw.css';
 
-const ExportCanvasButton = () => {
+const AnalyzeCanvasButton = ({ onAnalysisComplete }) => {
   const editor = useEditor();
-  return (
-    <button
-      style={{ pointerEvents: 'all', fontSize: 18, backgroundColor: 'thistle' }}
-      onClick={async () => {
-        const shapeIds = editor.getCurrentPageShapeIds();
-        if (shapeIds.size === 0) return alert('No shapes on the canvas');
-        const blob = await exportToBlob({
-          editor,
-          ids: [...shapeIds],
-          format: 'png',
-          opts: { background: false },
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    const shapeIds = editor.getCurrentPageShapeIds();
+    if (shapeIds.size === 0) {
+      alert('No shapes on the canvas');
+      setIsAnalyzing(false);
+      return;
+    }
+
+    try {
+      const blob = await exportToBlob({
+        editor,
+        ids: [...shapeIds],
+        format: 'png',
+        opts: { background: false },
+      });
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        
+        // Send to API
+        const response = await fetch('your-api-endpoint', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ image: base64data }),
         });
 
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = 'every-shape-on-the-canvas.jpg';
-        link.click();
+        if (!response.ok) {
+          throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        onAnalysisComplete(data.explanation);
+      };
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to analyze the image. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  return (
+    <button
+      style={{
+        pointerEvents: 'all',
+        fontSize: 18,
+        backgroundColor: isAnalyzing ? 'gray' : 'thistle',
+        padding: '10px 15px',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: isAnalyzing ? 'not-allowed' : 'pointer',
       }}
+      onClick={handleAnalyze}
+      disabled={isAnalyzing}
     >
-      Export canvas as image
+      {isAnalyzing ? 'Analyzing...' : 'Analyze canvas with ChatGPT'}
     </button>
   );
 };
 
-const Whiteboard = () => {
+const Whiteboard = ({ onAnalysisComplete }) => {
   const components = {
-    SharePanel: ExportCanvasButton,
+    SharePanel: () => <AnalyzeCanvasButton onAnalysisComplete={onAnalysisComplete} />,
   };
 
   return (
