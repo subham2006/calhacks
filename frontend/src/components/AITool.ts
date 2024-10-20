@@ -12,7 +12,7 @@ class AITool extends StateNode {
     this.extractImage();
   }
 
-  sendBlobToHome = async (blob: Blob) => {
+  sendBlobToHome = async () => {
     const shapeIds = this.editor.getCurrentPageShapeIds();
     if (shapeIds.size === 0) return alert("Nothing on the canvas");
 

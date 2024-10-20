@@ -6,7 +6,7 @@ import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
 import jasmineBackground from "../assets/backgrounds/aladdinBackground.jpg";
 import Whiteboard from "./Whiteboard.tsx";
 import "tldraw/tldraw.css";
-import { sendBlobToHome } from "./AITool.ts";
+import AITool from "./AITool.ts"; // Import the AITool class
 import axios from "axios";
 
 import jasmine from "../assets/characters/jasmine.png";
@@ -170,37 +170,31 @@ function Home() {
       socketRef.current.close();
     }
     // Retrieve the whiteboard image
-    const whiteBoardImage = sendBlobToHome();
+    const aiTool = new AITool(); // Create an instance of AITool
+    const whiteBoardImage = await aiTool.sendBlobToHome(); // Call the instance method
+
     // Add the collected transcript and sentiment to chat history
     if (collectedTranscript.trim()) {
-      addToChatHistory(
-        "user",
-        collectedTranscript.trim(),
-        // sentiment,
-        // sentimentScore,
-        whiteBoardImage
-      );
+      addToChatHistory("user", collectedTranscript.trim(), whiteBoardImage);
     }
 
     // Reset collected transcript
     setCollectedTranscript("");
     setIsRecording(false);
 
-    //make openAI api call, whatever it returns gets passed into playTTS
+    // Make OpenAI API call
     try {
       const response = await axios.post(
-        "http://localhost:3001/analyze-and-speak", // OpenAI API request is done on the server
-        {
-          chatHistory,
-        }
+        "http://localhost:3001/analyze-and-speak",
+        { chatHistory }
       );
 
       console.log(response.data.chatgpt_response);
+      // Optionally play TTS here
     } catch (error) {
-      console.log(error);
+      console.error("Error during API call:", error);
+      alert("Failed to get response from AI. Please try again.");
     }
-
-    // playTTS(response.data.chatgpt_response, selectedCharacter);
   };
 
   const addToChatHistory = (
