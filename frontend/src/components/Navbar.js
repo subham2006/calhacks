@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo.svg'
+import logo from '../assets/logo.svg';
 
 function Navbar() {
   return (
@@ -31,13 +31,13 @@ function Navbar() {
 const styles = {
   navbar: {
     backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e5e5e5',
+    // borderBottom: '1px solid #e5e5e5',
     padding: '10px 0',
   },
   container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px',
+    maxWidth: '100%', // Full width to match the whiteboard edges
+    margin: '0', // No auto-centering to align with edges
+    padding: '0 20px', // Adjust padding for better spacing
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -80,6 +80,8 @@ const styles = {
   navListContainer: {
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: '20px', // Adjust margin to align with the whiteboard’s right edge
   },
   navList: {
     listStyleType: 'none',
@@ -89,7 +91,7 @@ const styles = {
     padding: 0,
   },
   navItem: {
-    margin: '0 15px',
+    margin: '0 10px',
   },
   navLink: {
     textDecoration: 'none',

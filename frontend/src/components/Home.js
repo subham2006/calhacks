@@ -224,7 +224,7 @@ function Home() {
     <div
       style={{
         ...styles.container,
-        backgroundImage: `url(${selectedCharacter.background})`,
+        backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0) 80%, rgba(255, 255, 255, 1) 100%), url(${selectedCharacter.background})`,
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
