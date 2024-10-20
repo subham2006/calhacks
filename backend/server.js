@@ -1,34 +1,52 @@
-const WebSocket = require('ws');
+const express = require('express');
+const cors = require('cors');
+const { OpenAI } = require('openai');
+const dotenv = require('dotenv');
+dotenv.config();
 
-// Create a WebSocket server on port 8080
-const wss = new WebSocket.Server({ port: 8080 });
+const app = express();
+const port = 3001;
 
-wss.on('connection', (ws) => {
-  console.log('New client connected');
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-  ws.on('message', (data) => {
+const openai = new OpenAI();
+
+// Routes
+app.post('/analyze-whiteboard', async (req, res) => {
     try {
-      const parsedData = JSON.parse(data); // Parse the incoming JSON
-      console.log('Received:', parsedData); // Debug log
+        const { base64Image } = req.body;
 
-      // Broadcast the message to all connected clients except the sender
-      wss.clients.forEach((client) => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(parsedData)); // Send JSON string
+        if (!base64Image) {
+            return res.status(400).json({ error: 'No image provided' });
         }
-      });
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+            {
+                role: "user",
+                content: [
+                { type: "text", text: "What’s in this image? If you see an equation, please solve it." },
+                {
+                    type: "image_url",
+                    image_url: {
+                    url: base64Image,
+                    },
+                },
+                ],
+            },
+            ],
+        });
+          
+        res.json({"chatgpt_response" : response.choices[0].message.content});
+
     } catch (error) {
-      console.error('Invalid JSON received:', error); // Log JSON errors
+        console.log(error);
     }
-  });
-
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
-
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
-  });
 });
 
-console.log('WebSocket server running on ws://0.0.0.0:8080');
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
