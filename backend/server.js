@@ -17,7 +17,6 @@ const openai = new OpenAI();
 app.post('/analyze-whiteboard', async (req, res) => {
     try {
         const { base64Image, transcript } = req.body;
-        console.log("TRANSCRIPT", transcript);
 
         if (!base64Image) {
             return res.status(400).json({ error: 'No image provided' });
@@ -29,7 +28,7 @@ app.post('/analyze-whiteboard', async (req, res) => {
             {
                 role: "user",
                 content: [
-                { type: "text", text: "What’s in this image? If you see an equation, please solve it." },
+                { type: "text", text: `Pretend that I am a young child learning math and I am having a conversation with you. Here are some of the questions that I am asking you: ${transcript}. These questions refer to the math problems on the attached image. Please teach / tutor me how to solve these problems. Try to refrain from giving me the exact answer and instead drop hints and lay out potential steps / approaches. Feel free to use analogies if you see fit. The answer to the problem should not be revealed within a single prompt. Please keep the response to less than 3 sentences.` },
                 {
                     type: "image_url",
                     image_url: {
