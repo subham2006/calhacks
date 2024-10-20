@@ -45,6 +45,8 @@ function Home() {
   const mediaRecorderRef = useRef(null);
   const socketRef = useRef(null); // Store WebSocket reference
 
+  const isIpad = /iPad/i.test(navigator.userAgent); // Detect if the device is an iPad
+
   const startDeepgramStream = async () => {
     const socket = new WebSocket(
       `wss://api.deepgram.com/v1/listen?punctuate=true&model=enhanced&sentiment=true`,
@@ -228,79 +230,85 @@ function Home() {
         backgroundPosition: "center",
       }}
     >
-      <div style={styles.mainContent}>
-        <div style={styles.leftPanel}>
-          <div style={styles.whiteboardContainer}>
-            <Whiteboard />
-          </div>
+      {isIpad ? ( // Conditional rendering based on device type
+        <div style={{ width: "100%", height: "100%" }}>
+          <Whiteboard />
         </div>
-        <div style={styles.rightPanel}>
-          <header style={styles.header}>Ask a Question!</header>
-          <div style={styles.characterContainer}>
-            <div style={styles.characterWrapper}>
-              <img
-                src={selectedCharacter.src}
-                alt={selectedCharacter.name}
-                style={styles.characterImage}
-              />
+      ) : (
+        <div style={styles.mainContent}>
+          <div style={styles.leftPanel}>
+            <div style={styles.whiteboardContainer}>
+              <Whiteboard />
             </div>
-            <button onClick={openModal} style={styles.changeCharacterButton}>
-              Change Character
-            </button>
           </div>
-          <div style={styles.interactionArea}>
-            <button
-              onClick={handleMicrophoneClick}
-              style={styles.microphoneButton}
-            >
-              <div
-                style={{
-                  ...styles.microphoneCircle,
-                  backgroundColor: isRecording ? "#ff4d4d" : "#f0f0f0",
-                }}
-              >
+          <div style={styles.rightPanel}>
+            <header style={styles.header}>Ask a Question!</header>
+            <div style={styles.characterContainer}>
+              <div style={styles.characterWrapper}>
                 <img
-                  src="https://img.icons8.com/ios-filled/50/microphone.png"
-                  alt="Microphone Icon"
-                  style={styles.microphoneIcon}
+                  src={selectedCharacter.src}
+                  alt={selectedCharacter.name}
+                  style={styles.characterImage}
                 />
               </div>
-            </button>
-            <div style={styles.microphoneText}>
-              {isRecording ? "Listening..." : "Click to Talk"}
+              <button onClick={openModal} style={styles.changeCharacterButton}>
+                Change Character
+              </button>
             </div>
+            <div style={styles.interactionArea}>
+              <button
+                onClick={handleMicrophoneClick}
+                style={styles.microphoneButton}
+              >
+                <div
+                  style={{
+                    ...styles.microphoneCircle,
+                    backgroundColor: isRecording ? "#ff4d4d" : "#f0f0f0",
+                  }}
+                >
+                  <img
+                    src="https://img.icons8.com/ios-filled/50/microphone.png"
+                    alt="Microphone Icon"
+                    style={styles.microphoneIcon}
+                  />
+                </div>
+              </button>
+              <div style={styles.microphoneText}>
+                {isRecording ? "Listening..." : "Click to Talk"}
+              </div>
+              {transcript && (
+                <div style={styles.transcriptBox}>
+                  <p>{transcript}</p>
+                </div>
+              )}
+            </div>
+
             {transcript && (
               <div style={styles.transcriptBox}>
-                <p>{transcript}</p>
+                <p style={styles.transcriptText}>{transcript}</p>
+              </div>
+            )}
+
+            {showModal && (
+              <div style={styles.modal}>
+                <h2>Select a Character</h2>
+                {characters.map((char) => (
+                  <div
+                    key={char.name}
+                    style={styles.characterOption}
+                    onClick={() => selectCharacter(char)}
+                  >
+                    <p>{char.name}</p>
+                  </div>
+                ))}
+                <button onClick={closeModal} style={styles.closeModalButton}>
+                  Close
+                </button>
               </div>
             )}
           </div>
-
-          {transcript && (
-            <div style={styles.transcriptBox}>
-              <p style={styles.transcriptText}>{transcript}</p>
-            </div>
-          )}
-
-          {showModal && (
-            <div style={styles.modal}>
-              <h2>Select a Character</h2>
-              {characters.map((char) => (
-                <div
-                  key={char.name}
-                  style={styles.characterOption}
-                  onClick={() => selectCharacter(char)}
-                >
-                  <p>{char.name}</p>
-                </div>
-              ))}
-              <button onClick={closeModal} style={styles.closeModalButton}>
-                Close
-              </button>
-            </div>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
