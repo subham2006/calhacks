@@ -6,6 +6,8 @@ import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
 import jasmineBackground from "../assets/backgrounds/aladdinBackground.jpg";
 import Whiteboard from "./Whiteboard.tsx";
 import "tldraw/tldraw.css";
+import { sendBlobToHome } from "./AITool.ts";
+import axios from "axios";
 
 import jasmine from "../assets/characters/jasmine.png";
 import Cartesia from "@cartesia/cartesia-js";
@@ -21,7 +23,7 @@ const cartesia = new Cartesia({
 const characters = [
   { name: "Ang", src: ang, background: angBackground },
   { name: "Hiro", src: hiro, background: hiroBackground },
-  { name: "Jasmine", src: jasmine, background: jasmineBackground }
+  { name: "Jasmine", src: jasmine, background: jasmineBackground },
 ];
 
 // Character Voices Map
@@ -37,10 +39,10 @@ function Home() {
   const [collectedTranscript, setCollectedTranscript] = useState(""); // Store segments here
   const [sentiment, setSentiment] = useState("neutral"); // Store sentiment
   const [sentimentScore, setSentimentScore] = useState(0); // Store sentiment score
-  const [image, setImage] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(characters[0]);
   const [showModal, setShowModal] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
+  const [apiResponse, setApiResponse] = useState(""); // Store API response
 
   const mediaRecorderRef = useRef(null);
   const socketRef = useRef(null); // Store WebSocket reference
@@ -94,7 +96,7 @@ function Home() {
     setIsRecording(true);
   };
 
-  const playTTS = async (text, character, speed, emotion) => {
+  const playTTS = async (text, character) => {
     const voiceId = characterVoices[character.name] || "default-voice-id"; // Fallback voice
 
     try {
@@ -112,8 +114,8 @@ function Home() {
       const response = await websocket.send({
         model_id: "sonic-english", // Example model, adjust if necessary
         voice: {
-          speed: speed || "normal",
-          emotion: emotion || "neutral",
+          // speed: speed || "normal",
+          // emotion: emotion || "neutral",
           mode: "id",
           id: voiceId, // Use the voice ID from the character's map
         },
@@ -156,7 +158,7 @@ function Home() {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream
@@ -167,14 +169,16 @@ function Home() {
     if (socketRef.current) {
       socketRef.current.close();
     }
-
+    // Retrieve the whiteboard image
+    const whiteBoardImage = sendBlobToHome();
     // Add the collected transcript and sentiment to chat history
     if (collectedTranscript.trim()) {
       addToChatHistory(
         "user",
         collectedTranscript.trim(),
-        sentiment,
-        sentimentScore
+        // sentiment,
+        // sentimentScore,
+        whiteBoardImage
       );
     }
 
@@ -182,14 +186,37 @@ function Home() {
     setCollectedTranscript("");
     setIsRecording(false);
 
-    playTTS(
-      "that's really interesting, can you tell me more?",
-      selectedCharacter
-    );
+    //make openAI api call, whatever it returns gets passed into playTTS
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/analyze-and-speak", // OpenAI API request is done on the server
+        {
+          chatHistory,
+        }
+      );
+
+      console.log(response.data.chatgpt_response);
+    } catch (error) {
+      console.log(error);
+    }
+
+    // playTTS(response.data.chatgpt_response, selectedCharacter);
   };
 
-  const addToChatHistory = (role, content, sentiment, sentimentScore) => {
-    const newEntry = { role, content, sentiment, sentimentScore };
+  const addToChatHistory = (
+    role,
+    content,
+    // sentiment,
+    // sentimentScore,
+    whiteboardImage
+  ) => {
+    const newEntry = {
+      role,
+      content,
+      // sentiment,
+      // sentimentScore,
+      whiteboardImage,
+    };
     setChatHistory((prevHistory) => {
       const updatedHistory = [...prevHistory, newEntry];
       console.log("Updated Chat History:", updatedHistory); // Log the updated history
@@ -199,15 +226,6 @@ function Home() {
 
   const handleMicrophoneClick = () => {
     isRecording ? stopRecording() : startDeepgramStream();
-  };
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result);
-      reader.readAsDataURL(file);
-    }
   };
 
   const openModal = () => setShowModal(true);

@@ -12,6 +12,25 @@ class AITool extends StateNode {
     this.extractImage();
   }
 
+  sendBlobToHome = async (blob: Blob) => {
+    const shapeIds = this.editor.getCurrentPageShapeIds();
+    if (shapeIds.size === 0) return alert("Nothing on the canvas");
+
+    const whiteBlob = await exportToBlob({
+      editor: this.editor,
+      ids: [...shapeIds],
+      format: "png",
+      opts: { background: false },
+    });
+
+    const reader = new FileReader();
+    reader.readAsDataURL(whiteBlob);
+    const base64Image = await new Promise<string>((resolve) => {
+      reader.onloadend = () => resolve(reader.result as string);
+    });
+    return base64Image;
+  }
+
   extractImage = async () => {
     const shapeIds = this.editor.getCurrentPageShapeIds();
     if (shapeIds.size === 0) return alert("Nothing on the canvas");
