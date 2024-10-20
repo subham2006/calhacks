@@ -3,7 +3,7 @@ import ang from "../assets/characters/ang.png";
 import hiro from "../assets/characters/hiro.png";
 import angBackground from "../assets/backgrounds/avatarBackground.jpg";
 import hiroBackground from "../assets/backgrounds/baymaxBackground.jpg";
-import Whiteboard from "./Whiteboard";
+import Whiteboard from "./Whiteboard.tsx";
 import "tldraw/tldraw.css";
 
 import Cartesia from "@cartesia/cartesia-js";

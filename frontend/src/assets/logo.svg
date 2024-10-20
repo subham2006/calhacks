@@ -1,5 +1,4 @@
-
-lo<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M20 20H70V80H20V20Z" fill="#4A90E2"/>
 <path d="M70 20L80 30V90L70 80V20Z" fill="#3A80D2"/>
 <path d="M70 80L80 90H30L20 80H70Z" fill="#3A80D2"/>

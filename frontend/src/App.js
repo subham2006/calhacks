@@ -5,7 +5,7 @@ import Home from './components/Home';
 import About from './components/About';
 import Interact from './components/Interact'; // Drawing component
 import QRCodeInteraction from './components/QRCodeInteraction'; // QR code component
-import Whiteboard from './components/Whiteboard';
+import Whiteboard from './components/Whiteboard.tsx';
 import './App.css';
 
 function App() {
