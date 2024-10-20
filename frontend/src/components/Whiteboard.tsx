@@ -14,7 +14,7 @@ import {
   useIsToolSelected,
   useTools,
 } from "tldraw";
-import { useSyncDemo } from '@tldraw/sync'; // Import the sync hook
+import { useSyncDemo } from "@tldraw/sync"; // Import the sync hook
 
 const uiOverrides: TLUiOverrides = {
   tools(editor, tools) {
@@ -66,7 +66,7 @@ export const customAssetUrls: TLUiAssetUrlOverrides = {
 
 const customTools = [AITool];
 const Whiteboard = ({ updateEditor }) => {
-  const store = useSyncDemo({ roomId: 'my-unique-room-id' }); // Initialize the sync store
+  const store = useSyncDemo({ roomId: "my-unique-room-id" }); // Initialize the sync store
 
   return (
     <div
@@ -89,7 +89,6 @@ const Whiteboard = ({ updateEditor }) => {
         components={components}
         assetUrls={customAssetUrls}
         store={store} // Pass the store to Tldraw for collaboration
-        style={{ width: "100%", height: "100%" }} // Ensure Tldraw takes full width and height
       />
     </div>
   );

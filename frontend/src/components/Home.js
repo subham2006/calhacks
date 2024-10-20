@@ -47,6 +47,8 @@ function Home() {
   const [showModal, setShowModal] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Chat history array
 
+  const persistentTranscript = useRef([]); // Store the transcript across renders
+
   const [editor, setEditor] = useState(null);
 
   const handleSetEditor = (editorVal) => {
@@ -194,6 +196,8 @@ function Home() {
       socketRef.current.close();
     }
 
+    var characterResponse = "";
+
     const handleExtractImage = async () => {
       const shapeIds = editor.getCurrentPageShapeIds();
       if (shapeIds.size === 0) return alert("Nothing on the canvas");
@@ -214,14 +218,18 @@ function Home() {
     }
 
     const base64Image = await handleExtractImage();
-    console.log("BASE64 IMAGE", base64Image);
+
+    console.log("TRANSCRIPT:", collectedTranscript.trim());
+
+    persistentTranscript.current.push(collectedTranscript.trim());
 
     try {
       const response = await axios.post("http://localhost:3001/analyze-whiteboard",
         {
-          transcript: collectedTranscript.trim(),
+          transcript: persistentTranscript.current,
           base64Image: base64Image,
         })
+      characterResponse = response.data.chatgpt_response;
       console.log("HERE IS THE RESPONSE", response.data);
     } catch (error) {
       console.log(error);
@@ -242,7 +250,7 @@ function Home() {
     setIsRecording(false);
 
     playTTS(
-      "that's really interesting, can you tell me more? I really need you tell me a lot more so that this sentence takes up way more space, thanks so much for telling me such an interesting thing thats really really awesome",
+      characterResponse,
       selectedCharacter
     );
   };
